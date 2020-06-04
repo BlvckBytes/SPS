@@ -1,0 +1,4 @@
+name: SPS
+main: at.sps.core.Main
+version: 1.0
+authors: [BlvckBytes, flokir01]
