@@ -56,19 +56,17 @@ public class SCManager implements Listener {
 
     Pair< ShortCommand, Method > callHandle = commands.get( command );
 
-    // Check if the player has the permission to execute this
-    String perm = callHandle.getKey().permission();
-    if( !perm.equals( "" ) && !sender.hasPermission( perm ) ) {
-      sender.sendMessage( GlobalConstants.PREFIX.toString() + GlobalConstants.NO_PERM );
-      return;
-    }
-
     try {
       // Invoke the annotated command method with sender and args
       Object container = containers.get( command );
 
       String[] args = data.length > 1 ? Arrays.copyOfRange( data, 1, data.length ) : new String[]{};
-      callHandle.getValue().invoke( container, sender, args );
+      SCResult res = ( SCResult ) callHandle.getValue().invoke( container, sender, args );
+
+      // Notify of permission lack
+      if( res == SCResult.NO_PERM )
+        sender.sendMessage( GlobalConstants.PREFIX.toString() + GlobalConstants.NO_PERM );
+
     } catch ( Exception e ) {
       ConsoleLogger.getInst().logMessage( "&cError while trying to invoke an annotated SC method!" );
       ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );

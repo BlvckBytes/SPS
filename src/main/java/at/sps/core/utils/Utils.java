@@ -17,6 +17,11 @@ public class Utils {
     return ChatColor.translateAlternateColorCodes( '&', input );
   }
 
+  /**
+   * Generate the stacktrace string from an exception
+   * @param e Exception to stringify
+   * @return Stacktrace string
+   */
   public static String stringifyException( Exception e ) {
     try {
       // Create print writer on string writer

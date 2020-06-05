@@ -12,9 +12,6 @@ public @interface ShortCommand {
   // The command itself
   String command();
 
-  // Permission needed for execution, leave blank for none
-  String permission() default "";
-
   // Whether or not this command should be denied for console execution
   // If terminal executes, Player is going to be null
   boolean terminalDeny() default false;
