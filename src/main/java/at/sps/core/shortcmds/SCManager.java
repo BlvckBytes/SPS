@@ -93,7 +93,8 @@ public class SCManager implements Listener {
         // Parameters were defined in a corrupt way, skip this method
         // Only proper signature: (CommandSender sender, String[] args)
         Class< ? >[] parT = meth.getParameterTypes();
-        if( meth.getParameterCount() != 2 || !( parT[ 0 ] == CommandSender.class && parT[ 1 ] == String[].class ) ) {
+        boolean isProperReceiver = ( parT[ 0 ] == CommandSender.class || parT[ 0 ] == Player.class ) && parT[ 1 ] == String[].class;
+        if( meth.getParameterCount() != 2 || !isProperReceiver ) {
           ConsoleLogger.getInst().logMessage( "Corrupted method signature for ShortCommand at " + meth.getName() + "!" );
           return;
         }
