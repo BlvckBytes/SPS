@@ -42,8 +42,8 @@ public class Essentials {
 
     // Send out messages
     String msg = Utils.concatArgs( args, 1 );
-    sender.sendMessage( "§6Du §7» §6" + target.getDisplayName() + "§7: " + msg );
-    target.sendMessage( "§6" + sender.getDisplayName() + " §7» §6Dich§7: " + msg );
+    sender.sendMessage( GlobalConstants.PREFIX + "§6Du §7» §6" + target.getDisplayName() + "§7: " + msg );
+    target.sendMessage( GlobalConstants.PREFIX + "§6" + sender.getDisplayName() + " §7» §6Dich§7: " + msg );
 
     // Keep last recipient in buffer
     this.msgPartners.put( sender, target );
@@ -78,7 +78,7 @@ public class Essentials {
 
     // Send out messages
     String msg = Utils.concatArgs( args, 0 );
-    sender.sendMessage( "§6Du §7» §6" + partner.getDisplayName() + "§7: " + msg );
-    partner.sendMessage( "§6" + sender.getDisplayName() + " §7» §6Dich§7: " + msg );
+    sender.sendMessage( GlobalConstants.PREFIX + "§6Du §7» §6" + partner.getDisplayName() + "§7: " + msg );
+    partner.sendMessage( GlobalConstants.PREFIX + "§6" + sender.getDisplayName() + " §7» §6Dich§7: " + msg );
   }
 }
