@@ -112,44 +112,49 @@ public class SCManager implements Listener {
         // Make that method accessible for calling
         meth.setAccessible( true );
 
-        // Store command with it's call-handle and container into LUTs
-        this.commands.put( cmd, callHandle );
-        this.containers.put( cmd, container );
+        // Register command
+        registerCommand( cmd, callHandle, container );
 
-        // Store aliases as commands too
-        for( String alias : targAnno.aliases() ) {
-          this.commands.put( alias, callHandle );
-          containers.put( alias, container );
-        }
-
-        // Register tabbing functionallity
-        registerTab( cmd, dataPair -> {
-          // Terminal invocation is denied
-          if( targAnno.terminalDeny() ) {
-            ConsoleLogger.getInst().logMessage( "&c" + GlobalConstants.PLAYER_ONLY.toString() );
-            return;
-          }
-
-          String label = dataPair.getKey();
-          String[] args = dataPair.getValue();
-
-          // Invoke command with args and console sender, as stated in shortcommand annotation
-          try {
-            // Invoke with label or without, depending on receiver signature
-            if( meth.getParameterCount() == 3 )
-              meth.invoke( container, Bukkit.getConsoleSender(), args, label );
-            else
-              meth.invoke( container, Bukkit.getConsoleSender(), args );
-          } catch ( Exception e ) {
-            ConsoleLogger.getInst().logMessage( "&cError while trying to invoke an annotated SC method!" );
-            ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
-          }
-        } );
+        // Register aliases as commands too
+        for( String alias : targAnno.aliases() )
+          registerCommand( alias, callHandle, container );
       }
     } catch ( Exception e ) {
       ConsoleLogger.getInst().logMessage( "&cError while registering a SC container object!" );
       ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
     }
+  }
+
+  private void registerCommand( String cmd, Pair< ShortCommand, Method > callHandle, Object container ) {
+    // Store command with it's call-handle and container into LUTs
+    this.commands.put( cmd, callHandle );
+    this.containers.put( cmd, container );
+
+    // Register tabbing functionallity
+    ShortCommand targAnno = callHandle.getKey();
+    Method meth = callHandle.getValue();
+    registerTab( cmd, dataPair -> {
+      // Terminal invocation is denied
+      if( targAnno.terminalDeny() ) {
+        ConsoleLogger.getInst().logMessage( "&c" + GlobalConstants.PLAYER_ONLY.toString() );
+        return;
+      }
+
+      String label = dataPair.getKey();
+      String[] args = dataPair.getValue();
+
+      // Invoke command with args and console sender, as stated in shortcommand annotation
+      try {
+        // Invoke with label or without, depending on receiver signature
+        if( meth.getParameterCount() == 3 )
+          meth.invoke( container, Bukkit.getConsoleSender(), args, label );
+        else
+          meth.invoke( container, Bukkit.getConsoleSender(), args );
+      } catch ( Exception e ) {
+        ConsoleLogger.getInst().logMessage( "&cError while trying to invoke an annotated SC method!" );
+        ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
+      }
+    } );
   }
 
   /**

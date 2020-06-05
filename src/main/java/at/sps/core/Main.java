@@ -1,6 +1,7 @@
 package at.sps.core;
 
 import at.sps.commands.Essentials;
+import at.sps.commands.HomeCmd;
 import at.sps.core.shortcmds.SCManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -25,5 +26,6 @@ public class Main extends JavaPlugin {
   private void registerCommands() {
     SCManager scMan = new SCManager( this );
     scMan.registerContainer( new Essentials() );
+    scMan.registerContainer( new HomeCmd() );
   }
 }

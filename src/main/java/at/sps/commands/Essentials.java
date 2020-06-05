@@ -1,11 +1,13 @@
 package at.sps.commands;
 
+import at.sps.core.ConsoleLogger;
 import at.sps.core.GlobalConstants;
 import at.sps.core.shortcmds.ShortCommand;
 import at.sps.core.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
@@ -89,7 +91,7 @@ public class Essentials {
    * Used to change the gamemode of the player
    */
   @ShortCommand( command = "gamemode", aliases = { "gm" } )
-  private void changeGameMode( Player sender, String[] args, String label ) {
+  private void changeGameMode( CommandSender sender, String[] args, String label ) {
 
     // No permission
     if ( !sender.hasPermission( "sps.gm" ) ) {
@@ -113,6 +115,8 @@ public class Essentials {
       return;
     }
 
+    String executor = sender instanceof Player ? ( ( Player ) sender ).getDisplayName() : "Console";
+
     // Target specified, get player from args and change for that target
     if ( args.length == 2 ) {
 
@@ -127,7 +131,7 @@ public class Essentials {
 
       // Notify target
       target.sendMessage(
-        GlobalConstants.PREFIX + "Dein §dGameMode §7wurde von §d" + sender.getDisplayName() +
+        GlobalConstants.PREFIX + "Dein §dGameMode §7wurde von §d" + executor +
         " §7auf §d" + gm.name() + " §7geändert!"
       );
 
@@ -140,8 +144,14 @@ public class Essentials {
       return;
     }
 
+    // No player, can't change gm of console...
+    if( executor.equals( "Console" ) ) {
+      sender.sendMessage( GlobalConstants.PREFIX + "§c" + GlobalConstants.PLAYER_ONLY.toString() );
+      return;
+    }
+
     // Change for the executor himself, since no target was specified
-    sender.setGameMode( gm );
+    ( ( Player ) sender ).setGameMode( gm );
     // Notify executor
     sender.sendMessage( GlobalConstants.PREFIX + "Du hast deinen §dGameMode §7auf §d" + gm.name() + " §7geändert!" );
   }
@@ -151,27 +161,64 @@ public class Essentials {
    * Change the setAllowFly state of player
    */
   @ShortCommand( command = "fly" )
-  private void changeFly( Player sender, String[] args ) {
-    if ( !sender.hasPermission("sps.fly") ) {
+  private void changeFly( CommandSender sender, String[] args ) {
+
+    // No permission
+    if ( !sender.hasPermission( "sps.fly" ) ) {
       sender.sendMessage( GlobalConstants.PREFIX.toString() + GlobalConstants.NO_PERM.toString() );
       return;
     }
 
+    String executor = sender instanceof Player ? ( ( Player ) sender ).getDisplayName() : "Console";
+
+    // No target specified, toggle flight for executor
     if ( args.length == 0 ) {
-      sender.setAllowFlight( !sender.getAllowFlight() );
+
+      // No player, can't toggle fly of console...
+      if( executor.equals( "Console" ) ) {
+        sender.sendMessage( GlobalConstants.PREFIX + "§c" + GlobalConstants.PLAYER_ONLY.toString() );
+        return;
+      }
+
+      // Toggle state
+      Player exec = ( Player ) sender;
+      boolean newState = !exec.getAllowFlight();
+      exec.setAllowFlight( newState );
+      sender.sendMessage( GlobalConstants.PREFIX + "Du hast deinen §dFlymode §7auf §d" + ( newState ? "an" : "aus" ) + " §7geändert!" );
+      return;
     }
+
+    // Target specified
     if ( args.length == 1 ) {
-      if ( !sender.hasPermission("sps.fly.other") ) {
-        sender.sendMessage( GlobalConstants.PREFIX.toString() + GlobalConstants.NO_PERM.toString() );
+      // No permission
+      if ( !sender.hasPermission( "sps.fly.other" ) ) {
+        sender.sendMessage( GlobalConstants.PREFIX.toString() + GlobalConstants.NO_PERM );
         return;
       }
-      Player target = Bukkit.getPlayer( args[0] );
-      if( target != null ) {
-        target.setAllowFlight( !target.getAllowFlight() );
-        sender.sendMessage( GlobalConstants.PREFIX.toString() + "Fly toggled for " + target.getName() );
+
+      // Check if target is online
+      Player target = Bukkit.getPlayer( args[ 0 ] );
+      if( target == null ) {
+        sender.sendMessage( GlobalConstants.PREFIX + "§cDer Spieler '" + args[ 0 ] + "' ist nicht online!" );
         return;
       }
-      sender.sendMessage( GlobalConstants.PREFIX.toString() + GlobalConstants.NOT_FOUND.toString() );
+
+      // Toggle flight
+      boolean newState = !target.getAllowFlight();
+      String newStateName = newState ? "an" : "aus";
+      target.setAllowFlight( newState );
+
+      // Notify target
+      target.sendMessage(
+        GlobalConstants.PREFIX + "Dein §dFlugmodus §7wurde von §d" + executor +
+        " §7auf §d" + newStateName + " §7geändert!"
+      );
+
+      // Notify executor
+      sender.sendMessage(
+        GlobalConstants.PREFIX + "Du hast den §dFlugmodus §7von §d" + target.getDisplayName() +
+        " §7erfolgreich auf §d" + newStateName + " §7geändert!"
+      );
     }
   }
 }
