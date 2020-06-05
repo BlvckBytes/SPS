@@ -1,6 +1,7 @@
 package at.sps.core.utils;
 
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
