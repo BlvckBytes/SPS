@@ -1,5 +1,6 @@
 package at.sps.core.shortcmds;
 
+import at.sps.core.utils.Pair;
 import at.sps.core.utils.ParamCall;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.defaults.BukkitCommand;
@@ -7,7 +8,7 @@ import org.bukkit.entity.Player;
 
 public class SCEmptyCommand extends BukkitCommand {
 
-  private final ParamCall< String[] > invocation;
+  private final ParamCall< Pair< String, String[] > > invocation;
 
   /**
    * Create an "empty" bukkit-command for registration so that
@@ -18,7 +19,7 @@ public class SCEmptyCommand extends BukkitCommand {
    * @param command Command to register
    * @param invocation Callback for console invocation
    */
-  public SCEmptyCommand( String command, ParamCall< String[] > invocation ) {
+  public SCEmptyCommand( String command, ParamCall< Pair< String, String[] > > invocation ) {
     super( command );
     this.invocation = invocation;
   }
@@ -30,7 +31,7 @@ public class SCEmptyCommand extends BukkitCommand {
       return true;
 
     // Call the invocation callback with provided arguments
-    invocation.call( args );
+    invocation.call( new Pair<>( label, args ) );
     return true;
   }
 }

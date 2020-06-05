@@ -1,6 +1,7 @@
 package at.sps.core.utils;
 
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -56,5 +57,18 @@ public class Utils {
       message.append( " " ).append( args[ i ] );
 
     return message.toString();
+  }
+
+  /**
+   * Try to parse a string to an integer
+   * @param value the string to parse
+   * @return The parsed int or null if an error occurred
+   */
+  public static Integer tryParseInt(String value) {
+    try {
+      return Integer.parseInt(value);
+    } catch ( Exception ex ) {
+      return null;
+    }
   }
 }

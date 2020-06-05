@@ -4,6 +4,7 @@ import at.sps.core.GlobalConstants;
 import at.sps.core.shortcmds.ShortCommand;
 import at.sps.core.utils.Utils;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
@@ -28,14 +29,14 @@ public class Essentials {
   private void onMessage( Player sender, String[] args ) {
 
     // No recipient or no message specified
-    if( args.length <= 1 ) {
+    if ( args.length <= 1 ) {
       sender.sendMessage( GlobalConstants.PREFIX + "§cBenutze: /msg <Empfänger> <Nachricht>" );
       return;
     }
 
     // Make sure the recipient is online
     Player target = Bukkit.getPlayer( args[ 0 ] );
-    if( target == null ) {
+    if ( target == null ) {
       sender.sendMessage( GlobalConstants.PREFIX + "§cDer Spieler '" + args[ 0 ] + "' ist nicht online!" );
       return;
     }
@@ -59,20 +60,20 @@ public class Essentials {
 
     // No recipient in buffer yet
     Player partner = this.msgPartners.get( sender );
-    if( partner == null ) {
+    if ( partner == null ) {
       sender.sendMessage( GlobalConstants.PREFIX + "§cDir hat noch niemand geschrieben, dem du antworten kannst!" );
       return;
     }
 
     // Recipient went offline
-    if( !partner.isOnline() ) {
+    if ( !partner.isOnline() ) {
       sender.sendMessage( GlobalConstants.PREFIX + "§cDer Spieler '" + partner.getDisplayName() + "' ist in der Zwischenzeit offline gegangen!" );
       return;
     }
 
     // No message specified
-    if( args.length == 0 ) {
-      sender.sendMessage( GlobalConstants.PREFIX + "§cBenutze: /r <message>" );
+    if ( args.length == 0 ) {
+      sender.sendMessage( GlobalConstants.PREFIX + "§cBenutze: /r <Nachricht>" );
       return;
     }
 
@@ -83,16 +84,75 @@ public class Essentials {
   }
 
   /**
-   * Command: gm
+   * Command: gm, gamemode
    * Used to change the gamemode of the player
    */
-  @ShortCommand(command = "gm")
-  private void changeGameMode( Player sender, String[] args ) {
+  @ShortCommand( command = "gamemode", aliases = { "gm" } )
+  private void changeGameMode( Player sender, String[] args, String label ) {
 
+    // No permission
+    if ( !sender.hasPermission( "sps.gm" ) ) {
+      sender.sendMessage( GlobalConstants.PREFIX.toString() + GlobalConstants.NO_PERM );
+      return;
+    }
+
+    // No args specified
+    if ( args.length == 0 ) {
+      sender.sendMessage( GlobalConstants.PREFIX + "Benutze: /" + label + " <Modus> [Spieler]" );
+      return;
+    }
+
+    // Parse mode from arg, fallback is survival (0)
+    Integer mode = Utils.tryParseInt( args[ 0 ] );
+    GameMode gm = GameMode.getByValue( mode == null ? 0 : mode );
+
+    // Invalid gamemode
+    if ( gm == null ) {
+      sender.sendMessage( GlobalConstants.PREFIX + "§cUngültiger Modus angegeben (" + args[ 0 ] + ")!" );
+      return;
+    }
+
+    // Target specified, get player from args and change for that target
+    if ( args.length == 2 ) {
+
+      // No permission
+      if( !sender.hasPermission( "sps.gm.other" ) ) {
+        sender.sendMessage( GlobalConstants.PREFIX.toString() + GlobalConstants.NO_PERM );
+        return;
+      }
+
+      Player target = Bukkit.getPlayer( args[ 1 ] );
+      target.setGameMode( gm );
+
+      // Notify target
+      target.sendMessage(
+        GlobalConstants.PREFIX + "Dein §dGameMode §7wurde von §d" + sender.getDisplayName() +
+        " §7auf §d" + gm.name() + " §7geändert!"
+      );
+
+      // Notify executor
+      sender.sendMessage(
+        GlobalConstants.PREFIX + "Du hast den §dGameMode §7von §d" + target.getDisplayName() +
+        " §7erfolgreich auf §d" + gm.name() + " §7geändert!"
+      );
+
+      return;
+    }
+
+    // Change for the executor himself, since no target was specified
+    sender.setGameMode( gm );
+
+    // Notify executor
+    sender.sendMessage( GlobalConstants.PREFIX + "Du hast deinen §dGameMode §7auf §d" + gm.name() + " §7geändert!" );
   }
 
-  @ShortCommand(command = "fly")
+  /**
+   * Change the setAllowFly state of player
+   */
+  @ShortCommand( command = "fly" )
   private void changeFly( Player sender, String[] args ) {
-    sender.setAllowFlight(!sender.getAllowFlight());
+    if ( sender.hasPermission( "sps.fly" ) ) {
+      sender.setAllowFlight( !sender.getAllowFlight() );
+    }
   }
 }

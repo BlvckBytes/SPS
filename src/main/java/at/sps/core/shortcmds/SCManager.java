@@ -60,13 +60,15 @@ public class SCManager implements Listener {
       // Invoke the annotated command method with sender and args
       Object container = containers.get( command );
 
+      // Generate args from data array, just skip first element
       String[] args = data.length > 1 ? Arrays.copyOfRange( data, 1, data.length ) : new String[]{};
-      SCResult res = ( SCResult ) callHandle.getValue().invoke( container, sender, args );
+      Method receiver = callHandle.getValue();
 
-      // Notify of permission lack
-      if( res == SCResult.NO_PERM )
-        sender.sendMessage( GlobalConstants.PREFIX.toString() + GlobalConstants.NO_PERM );
-
+      // Invoke with label or without, depending on receiver signature
+      if( receiver.getParameterCount() == 3 )
+        receiver.invoke( container, sender, args, command );
+      else
+        receiver.invoke( container, sender, args );
     } catch ( Exception e ) {
       ConsoleLogger.getInst().logMessage( "&cError while trying to invoke an annotated SC method!" );
       ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
@@ -91,8 +93,15 @@ public class SCManager implements Listener {
         // Parameters were defined in a corrupt way, skip this method
         // Only proper signature: (CommandSender sender, String[] args)
         Class< ? >[] parT = meth.getParameterTypes();
-        boolean isProperReceiver = ( parT[ 0 ] == CommandSender.class || parT[ 0 ] == Player.class ) && parT[ 1 ] == String[].class;
-        if( meth.getParameterCount() != 2 || !isProperReceiver ) {
+
+        // Check if the receiver method is written up properly, first check first two args (sender, args)
+        boolean isProperReceiver = ( meth.getParameterCount() >= 2 && parT[ 0 ] == CommandSender.class || parT[ 0 ] == Player.class && parT[ 1 ] == String[].class );
+
+        // Now check if the third argument (which is optional) is a string, the label - for aliases
+        if( meth.getParameterCount() == 3 && parT[ 2 ] != String.class )
+          isProperReceiver = false;
+
+        if( !isProperReceiver ) {
           ConsoleLogger.getInst().logMessage( "Corrupted method signature for ShortCommand at " + meth.getName() + "!" );
           return;
         }
@@ -107,17 +116,30 @@ public class SCManager implements Listener {
         this.commands.put( cmd, callHandle );
         this.containers.put( cmd, container );
 
+        // Store aliases as commands too
+        for( String alias : targAnno.aliases() ) {
+          this.commands.put( alias, callHandle );
+          containers.put( alias, container );
+        }
+
         // Register tabbing functionallity
-        registerTab( cmd, args -> {
+        registerTab( cmd, dataPair -> {
           // Terminal invocation is denied
           if( targAnno.terminalDeny() ) {
             ConsoleLogger.getInst().logMessage( "&c" + GlobalConstants.PLAYER_ONLY.toString() );
             return;
           }
 
-          // Invoke command with args and no sender, as stated in shortcommand annotation
+          String label = dataPair.getKey();
+          String[] args = dataPair.getValue();
+
+          // Invoke command with args and console sender, as stated in shortcommand annotation
           try {
-            meth.invoke( container, Bukkit.getConsoleSender(), args );
+            // Invoke with label or without, depending on receiver signature
+            if( meth.getParameterCount() == 3 )
+              meth.invoke( container, Bukkit.getConsoleSender(), args, label );
+            else
+              meth.invoke( container, Bukkit.getConsoleSender(), args );
           } catch ( Exception e ) {
             ConsoleLogger.getInst().logMessage( "&cError while trying to invoke an annotated SC method!" );
             ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
@@ -138,7 +160,7 @@ public class SCManager implements Listener {
    * @param command Command's name
    * @param consoleCall Callback for command line invocation, passes args
    */
-  private void registerTab( String command, ParamCall< String[] > consoleCall ) {
+  private void registerTab( String command, ParamCall< Pair< String, String[] > > consoleCall ) {
     SCEmptyCommand cmd = new SCEmptyCommand( command, consoleCall );
 
     // Register command in bukkit's command-map using reflect
