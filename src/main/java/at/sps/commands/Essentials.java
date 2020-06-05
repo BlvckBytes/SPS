@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class Essentials {
 
-  private Map< Player, Player > msgPartners;
+  private final Map< Player, Player > msgPartners;
 
   /**
    * Essential commands holder, create all maps and lists
@@ -86,15 +86,13 @@ public class Essentials {
    * Command: gm
    * Used to change the gamemode of the player
    */
-  @ShortCommand(command = "gm", permission = "fly")
+  @ShortCommand(command = "gm")
   private void changeGameMode( Player sender, String[] args ) {
 
   }
 
-  @ShortCommand(command = "fly", permission = "sps.fly")
+  @ShortCommand(command = "fly")
   private void changeFly( Player sender, String[] args ) {
     sender.setAllowFlight(!sender.getAllowFlight());
   }
-
-
 }
