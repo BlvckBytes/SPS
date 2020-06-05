@@ -11,7 +11,10 @@ public enum GlobalConstants {
   NO_PERM( "&cDu besitzt die dazu notwendigen Rechte leider nicht!" ),
 
   // Player only commands get blocked in the console
-  PLAYER_ONLY( "This command is only usable ingame!" );
+  PLAYER_ONLY( "This command is only usable ingame!" ),
+
+  // The target player is not found
+  NOT_FOUND( "&cDer gewählte Spieler wurde nicht gefunden");
 
   private final String value;
 

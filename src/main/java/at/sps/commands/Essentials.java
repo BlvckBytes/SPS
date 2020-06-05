@@ -5,6 +5,7 @@ import at.sps.core.shortcmds.ShortCommand;
 import at.sps.core.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
@@ -141,18 +142,36 @@ public class Essentials {
 
     // Change for the executor himself, since no target was specified
     sender.setGameMode( gm );
-
     // Notify executor
     sender.sendMessage( GlobalConstants.PREFIX + "Du hast deinen §dGameMode §7auf §d" + gm.name() + " §7geändert!" );
   }
 
   /**
+   * Command: fly
    * Change the setAllowFly state of player
    */
   @ShortCommand( command = "fly" )
   private void changeFly( Player sender, String[] args ) {
-    if ( sender.hasPermission( "sps.fly" ) ) {
+    if ( !sender.hasPermission("sps.fly") ) {
+      sender.sendMessage( GlobalConstants.PREFIX.toString() + GlobalConstants.NO_PERM.toString() );
+      return;
+    }
+
+    if ( args.length == 0 ) {
       sender.setAllowFlight( !sender.getAllowFlight() );
+    }
+    if ( args.length == 1 ) {
+      if ( !sender.hasPermission("sps.fly.other") ) {
+        sender.sendMessage( GlobalConstants.PREFIX.toString() + GlobalConstants.NO_PERM.toString() );
+        return;
+      }
+      Player target = Bukkit.getPlayer( args[0] );
+      if( target != null ) {
+        target.setAllowFlight( !target.getAllowFlight() );
+        sender.sendMessage( GlobalConstants.PREFIX.toString() + "Fly toggled for " + target.getName() );
+        return;
+      }
+      sender.sendMessage( GlobalConstants.PREFIX.toString() + GlobalConstants.NOT_FOUND.toString() );
     }
   }
 }
