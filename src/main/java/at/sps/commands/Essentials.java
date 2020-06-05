@@ -81,4 +81,20 @@ public class Essentials {
     sender.sendMessage( GlobalConstants.PREFIX + "§6Du §7» §6" + partner.getDisplayName() + "§7: " + msg );
     partner.sendMessage( GlobalConstants.PREFIX + "§6" + sender.getDisplayName() + " §7» §6Dich§7: " + msg );
   }
+
+  /**
+   * Command: gm
+   * Used to change the gamemode of the player
+   */
+  @ShortCommand(command = "gm", permission = "fly")
+  private void changeGameMode( Player sender, String[] args ) {
+
+  }
+
+  @ShortCommand(command = "fly", permission = "sps.fly")
+  private void changeFly( Player sender, String[] args ) {
+    sender.setAllowFlight(!sender.getAllowFlight());
+  }
+
+
 }

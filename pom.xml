@@ -20,7 +20,7 @@
         <repository>
             <id>project.local</id>
             <name>project</name>
-            <url>file:///Users/blvckbytes/.m2/repository</url>
+            <url>file:///Users/flo/.m2/repository</url>
         </repository>
     </repositories>
 

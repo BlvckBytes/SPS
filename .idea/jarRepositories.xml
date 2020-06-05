@@ -2,9 +2,19 @@
 <project version="4">
   <component name="RemoteRepositoriesConfiguration">
     <remote-repository>
+      <option name="id" value="project.local" />
+      <option name="name" value="project" />
+      <option name="url" value="file://$MAVEN_REPOSITORY$" />
+    </remote-repository>
+    <remote-repository>
       <option name="id" value="spigot-repo" />
       <option name="name" value="spigot-repo" />
       <option name="url" value="https://hub.spigotmc.org/nexus/content/repositories/snapshots/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="project.local" />
+      <option name="name" value="project" />
+      <option name="url" value="file:///Users/flo/.m2/repository" />
     </remote-repository>
     <remote-repository>
       <option name="id" value="central" />
@@ -24,7 +34,7 @@
     <remote-repository>
       <option name="id" value="project.local" />
       <option name="name" value="project" />
-      <option name="url" value="file://$MAVEN_REPOSITORY$" />
+      <option name="url" value="file:///Users/blvckbytes/.m2/repository" />
     </remote-repository>
     <remote-repository>
       <option name="id" value="jboss.community" />
