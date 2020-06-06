@@ -3,20 +3,30 @@ package at.sps.core;
 import at.sps.commands.Essentials;
 import at.sps.commands.HomeCmd;
 import at.sps.core.shortcmds.SCManager;
+import at.sps.core.storage.MariaDB;
+import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class Main extends JavaPlugin {
+
+  @Getter
+  private static MariaDB db;
 
   @Override
   public void onEnable() {
     // Standard enabling routines
     registerCommands();
+    setupResources();
 
     ConsoleLogger.getInst().logMessage( "&aSystem initialized successfully!" );
   }
 
   @Override
   public void onDisable() {
+    // Disconnect DB if existent
+    if( db != null )
+      db.disconnect();
+
     ConsoleLogger.getInst().logMessage( "&aSystem shutdown!" );
   }
 
@@ -27,5 +37,13 @@ public class Main extends JavaPlugin {
     SCManager scMan = new SCManager( this );
     scMan.registerContainer( new Essentials() );
     scMan.registerContainer( new HomeCmd() );
+  }
+
+  /**
+   * Set up all needed resources for external classes
+   */
+  private void setupResources() {
+    db = new MariaDB( "root", "aidoh8Aitah5e" );
+    db.connect();
   }
 }
