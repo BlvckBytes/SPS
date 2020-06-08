@@ -26,6 +26,7 @@ public class Essentials {
 
   /**
    * Command: msg
+   * Usage: /msg player message
    * Used to send messages between players privately
    */
   @ShortCommand( command = "msg", terminalDeny = true )
@@ -56,6 +57,7 @@ public class Essentials {
 
   /**
    * Command: r
+   * Usage: /r message
    * Used to reply to the last received message
    */
   @ShortCommand( command = "r", terminalDeny = true )
@@ -88,6 +90,7 @@ public class Essentials {
 
   /**
    * Command: gm, gamemode
+   * Usage: /gm|gamemode mode [player]
    * Used to change the gamemode of the player
    */
   @ShortCommand( command = "gamemode", aliases = { "gm" } )
@@ -158,7 +161,8 @@ public class Essentials {
 
   /**
    * Command: fly
-   * Change the setAllowFly state of player
+   * Usage: /fly [Player]
+   * Toggle the setAllowFly state of a player
    */
   @ShortCommand( command = "fly" )
   private void changeFly( CommandSender sender, String[] args ) {

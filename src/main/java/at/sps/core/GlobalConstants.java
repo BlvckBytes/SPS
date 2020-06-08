@@ -11,7 +11,10 @@ public enum GlobalConstants {
   NO_PERM( "&cDu besitzt die dazu notwendigen Rechte leider nicht!" ),
 
   // Player only commands get blocked in the console
-  PLAYER_ONLY( "This command is only usable ingame!" );
+  PLAYER_ONLY( "&cDieses Kommando kann nur als Spieler benutzt werden!" ),
+
+  // Internal error occurred
+  INTERNAL_ERROR( "&4Es ist ein interner Fehler aufgetreten, melde diesen bitte einem Admin!" );
 
   private final String value;
 

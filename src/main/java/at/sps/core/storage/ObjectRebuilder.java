@@ -1,4 +1,4 @@
-package at.sps.core.utils;
+package at.sps.core.storage;
 
 import java.lang.reflect.Constructor;
 import java.sql.ResultSet;
