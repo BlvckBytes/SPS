@@ -5,7 +5,7 @@ import at.sps.core.utils.Utils;
 public enum GlobalConstants {
 
   // Prefix, used in every message
-  PREFIX( "&5&lSPS &7| " ),
+  PREFIX( "&5&lSPS &7┃ " ),
 
   // No permission to do this
   NO_PERM( "&cDu besitzt die dazu notwendigen Rechte leider nicht!" ),

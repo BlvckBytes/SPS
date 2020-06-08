@@ -109,7 +109,6 @@ public class MariaDB {
   public int executeUpdate( String query, Object... data ) throws Exception {
     PreparedStatement ps = prepareQuery( query, data );
     assert ps != null;
-
     return ps.executeUpdate();
   }
   /**
@@ -121,7 +120,6 @@ public class MariaDB {
   public ResultSet fetchResult( String query, Object... data ) throws Exception {
     PreparedStatement ps = prepareQuery( query, data );
     assert ps != null;
-
     return ps.executeQuery();
   }
 }

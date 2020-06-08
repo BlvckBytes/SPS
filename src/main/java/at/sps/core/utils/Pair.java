@@ -20,6 +20,7 @@ public class Pair< A, B > {
     this.value = value;
   }
 
+  // Used for debugging purposes only
   @Override
   public String toString() {
     return "Pair(" + key + ", " + value + ")";
