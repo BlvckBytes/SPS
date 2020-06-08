@@ -4,8 +4,12 @@ import at.sps.commands.Essentials;
 import at.sps.commands.HomeCmd;
 import at.sps.core.shortcmds.SCManager;
 import at.sps.core.storage.MariaDB;
+import at.sps.model.Home;
 import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.sql.ResultSet;
+import java.util.List;
 
 public class Main extends JavaPlugin {
 
@@ -17,6 +21,17 @@ public class Main extends JavaPlugin {
     // Standard enabling routines
     registerCommands();
     setupResources();
+
+    try {
+      ResultSet rs = db.readData( "SELECT * FROM `Home`", null );
+      List< Home > homes = Home.read( rs );
+
+      for( Home h : homes )
+        System.out.println( h );
+
+    } catch ( Exception e ) {
+      e.printStackTrace();
+    }
 
     ConsoleLogger.getInst().logMessage( "&aSystem initialized successfully!" );
   }
@@ -43,7 +58,7 @@ public class Main extends JavaPlugin {
    * Set up all needed resources for external classes
    */
   private void setupResources() {
-    db = new MariaDB( "root", "aidoh8Aitah5e" );
+    db = new MariaDB( "root", "aidoh8Aitah5e", "sps" );
     db.connect();
   }
 }

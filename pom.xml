@@ -29,7 +29,6 @@
     <version>1.0</version>
 
     <dependencies>
-
         <!-- Lombok annotation lib -->
         <dependency>
             <groupId>org.projectlombok</groupId>

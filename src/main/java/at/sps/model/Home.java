@@ -1,29 +1,26 @@
 package at.sps.model;
 
-import at.sps.dao.DaoField;
-import at.sps.dao.DaoInternalFields;
+import at.sps.core.utils.ObjectRebuilder;
 import lombok.Getter;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class Home {
 
     @Getter
-    @DaoField( storageName = "uuid" )
-    private final UUID playerUUID;
+    private UUID playerUUID;
 
     @Getter
-    @DaoField
-    private final String name;
+    private String name;
 
     @Getter
-    @DaoInternalFields( fields = { "x", "y", "z", "yaw", "pitch" } )
-    private final Location location;
-
-    @Getter
-    @DaoField
-    private final String world;
+    private Location location;
 
     /**
      * Create a new home based on the holder's uuid, a name and the pre-existing
@@ -36,8 +33,29 @@ public class Home {
         this.playerUUID = playerUUID;
         this.name = name;
         this.location = location;
+    }
 
-        // Internal only fields, used for the Dao
-        this.world = location.getWorld().getName();
+    // NOTE: Only used for debugging purposes!
+    @Override
+    public String toString() {
+        String world = location.getWorld() == null ? "null" : location.getWorld().getName();
+        return "Home{" + playerUUID + ", " + name + ", " + location.getX() + ", " + location.getY() + ", " + location.getZ() + ", " + location.getYaw() + ", " + location.getPitch() + ", " + world + "}";
+    }
+
+    public static List< Home > read( ResultSet rs ) throws Exception {
+        List< Home > buf = new ArrayList<>();
+
+        while( rs.next() ) {
+            World w = Bukkit.getWorld( rs.getString( "world" ) );
+            Location loc = new ObjectRebuilder< Location >( Location.class, rs )
+                    .addArgs( w )
+                    .addColumns( "x", "y", "z", "yaw", "pitch" )
+                    .build();
+
+            UUID uu = UUID.fromString( rs.getString( "uuid" ) );
+            buf.add( new Home( uu, rs.getString( "name" ), loc ) );
+        }
+
+        return buf;
     }
 }

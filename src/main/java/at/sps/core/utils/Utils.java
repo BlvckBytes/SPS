@@ -1,10 +1,13 @@
 package at.sps.core.utils;
 
+import at.sps.core.ConsoleLogger;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Field;
+import java.sql.ResultSet;
 
 public class Utils {
 
@@ -70,5 +73,40 @@ public class Utils {
     } catch ( Exception ex ) {
       return null;
     }
+  }
+
+  /**
+   * Map field values from one object to another one, by their names
+   * @param from Data source object
+   * @param to Data destination object
+   * @param names Names to map, either x if both are the same, or x1;x2 for differing fields
+   *              where x1 is the source and x2 is the destination field name. Of course, fields
+   *              need to have the same datatype
+   */
+  public static void mapFields( Object from, Object to, String[] names ) {
+    try {
+      // Loop all fields
+      for( String fName : names ) {
+        String[] nameData = fName.split( ";" );
+
+        // Get source and target fields
+        Field sourceF = from.getClass().getDeclaredField( nameData[ 0 ] );
+        Field destF = from.getClass().getDeclaredField( nameData.length == 1 ? nameData[ 0 ] : nameData[ 1 ] );
+
+        // Make both fields accesible
+        destF.setAccessible( true );
+        sourceF.setAccessible( true );
+
+        // Mirror value
+        destF.set( to, sourceF.get( from ) );
+      }
+    } catch ( Exception e ) {
+      ConsoleLogger.getInst().logMessage( "&cError while trying to map fields automatically!" );
+      ConsoleLogger.getInst().logMessage( "&c" + stringifyException( e ) );
+    }
+  }
+
+  public static Object[] extractFields( Object[] arr, ResultSet data, String[] fields ) {
+    return arr;
   }
 }

@@ -4,17 +4,7 @@
     <remote-repository>
       <option name="id" value="project.local" />
       <option name="name" value="project" />
-      <option name="url" value="file://$MAVEN_REPOSITORY$" />
-    </remote-repository>
-    <remote-repository>
-      <option name="id" value="project.local" />
-      <option name="name" value="project" />
       <option name="url" value="file:////home/flo/.m2/repository" />
-    </remote-repository>
-    <remote-repository>
-      <option name="id" value="project.local" />
-      <option name="name" value="project" />
-      <option name="url" value="file://$USER_HOME$/flo/.m2/repository" />
     </remote-repository>
     <remote-repository>
       <option name="id" value="spigot-repo" />
@@ -25,6 +15,11 @@
       <option name="id" value="central" />
       <option name="name" value="Central Repository" />
       <option name="url" value="https://repo.maven.apache.org/maven2" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="project.local" />
+      <option name="name" value="project" />
+      <option name="url" value="file://$USER_HOME$/flo/.m2/repository" />
     </remote-repository>
     <remote-repository>
       <option name="id" value="central" />
@@ -40,6 +35,11 @@
       <option name="id" value="project.local" />
       <option name="name" value="project" />
       <option name="url" value="$MAVEN_REPOSITORY$" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="project.local" />
+      <option name="name" value="project" />
+      <option name="url" value="file://$MAVEN_REPOSITORY$" />
     </remote-repository>
     <remote-repository>
       <option name="id" value="jboss.community" />

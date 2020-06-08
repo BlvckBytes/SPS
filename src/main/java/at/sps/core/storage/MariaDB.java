@@ -12,16 +12,17 @@ import java.util.Collection;
 public class MariaDB {
 
   private Connection conn;
-  private final String username, password;
+  private final String username, password, database;
 
   /**
    * A new MySQL / MariaDB connection instance
    * @param username Username for auth
    * @param password Password for auth
    */
-  public MariaDB( String username, String password ) {
+  public MariaDB( String username, String password, String database ) {
     this.username = username;
     this.password = password;
+    this.database = database;
   }
 
   /**
@@ -30,7 +31,10 @@ public class MariaDB {
   public void connect() {
     try {
       Class.forName( "com.mysql.jdbc.Driver" );
-      this.conn = DriverManager.getConnection( "jdbc:mysql://localhost:3306", this.username, this.password );
+      String url = "jdbc:mysql://localhost:3306/" + this.database +
+              "?useUnicode=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
+
+      this.conn = DriverManager.getConnection( url, this.username, this.password );
 
       ConsoleLogger.getInst().logMessage( "&aSuccessfully connected to database!" );
     } catch ( Exception e ) {
@@ -67,10 +71,12 @@ public class MariaDB {
       PreparedStatement ps = this.conn.prepareStatement( query );
 
       // Set all questionmark's values in query
-      int c = 1;
-      for( Object curr : data ) {
-        ps.setObject( c, curr );
-        c++;
+      if( data != null ) {
+        int c = 1;
+        for ( Object curr : data ) {
+          ps.setObject( c, curr );
+          c++;
+        }
       }
 
       return ps;
