@@ -1,23 +1,26 @@
-package at.sps.model;
+package at.sps.core.orm.models;
 
+import at.sps.core.orm.MappableModel;
+import at.sps.core.orm.MapperColumn;
+import at.sps.core.orm.RebuilderColumns;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
 
 import java.util.UUID;
 
-public class Home {
+public class Home extends MappableModel {
 
-    @Getter
-    @Setter
-    private UUID playerUUID;
-
-    @Getter
-    @Setter
+    @Getter @Setter
+    @MapperColumn( unique = true, length = "128" )
     private String name;
 
-    @Getter
-    @Setter
+    @Getter @Setter
+    @MapperColumn( name = "uuid", unique = true, length = "40" )
+    private UUID playerUUID;
+
+    @Getter @Setter
+    @RebuilderColumns( fields = { "x", "y", "z", "yaw", "pitch", "world" } )
     private Location location;
 
     /**
@@ -41,6 +44,6 @@ public class Home {
                 playerUUID + ", " + name + ", " +
                 location.getX() + ", " + location.getY() + ", " + location.getZ() + ", " +
                 location.getYaw() + ", " + location.getPitch() + ", " + world +
-                "}";
+        "}";
     }
 }

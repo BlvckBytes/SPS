@@ -1,11 +1,10 @@
 package at.sps.commands;
 
 import at.sps.core.GlobalConstants;
-import at.sps.core.Main;
 import at.sps.core.shortcmds.ShortCommand;
-import at.sps.core.storage.ActionResult;
-import at.sps.mappers.HomeMapper;
-import at.sps.model.Home;
+import at.sps.core.orm.ActionResult;
+import at.sps.core.orm.mappers.HomeMapper;
+import at.sps.core.orm.models.Home;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -27,8 +26,7 @@ public class HomeCmd {
         }
 
         // Fetch home from DB
-        HomeMapper hm = new HomeMapper( Main.getDb() );
-        Home target = hm.getByName( sender.getUniqueId(), args[ 0 ] );
+        Home target = HomeMapper.getInst().getByName( sender.getUniqueId(), args[ 0 ] );
 
         // Home non existent
         if( target == null ) {
@@ -54,9 +52,8 @@ public class HomeCmd {
             return;
         }
 
-        HomeMapper hm = new HomeMapper( Main.getDb() );
         Home added = new Home( sender.getUniqueId(), args[ 0 ], sender.getLocation() );
-        ActionResult result = hm.addHome( added );
+        ActionResult result = HomeMapper.getInst().addHome( added );
 
         switch ( result ) {
 
@@ -91,8 +88,7 @@ public class HomeCmd {
         }
 
         // Try to delete the existing home from the database
-        HomeMapper hm = new HomeMapper( Main.getDb() );
-        ActionResult result = hm.removeHome( sender.getUniqueId(), args[ 0 ] );
+        ActionResult result = HomeMapper.getInst().removeHome( sender.getUniqueId(), args[ 0 ] );
 
         switch ( result ) {
 
@@ -121,8 +117,7 @@ public class HomeCmd {
     @ShortCommand( command = "homes", terminalDeny = true )
     private void onHomes( Player sender, String[] args ) {
         // Fetch all existing homes from the database
-        HomeMapper hm = new HomeMapper( Main.getDb() );
-        List< Home > homes = hm.listHomes( sender.getUniqueId() );
+        List< Home > homes = HomeMapper.getInst().listHomes( sender.getUniqueId() );
 
         // Build message
         StringBuilder sb = new StringBuilder( "§7Deine Homes: " );

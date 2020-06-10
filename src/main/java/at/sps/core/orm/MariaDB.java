@@ -1,4 +1,4 @@
-package at.sps.core.storage;
+package at.sps.core.orm;
 
 import at.sps.core.ConsoleLogger;
 import at.sps.core.utils.Utils;
@@ -34,7 +34,7 @@ public class MariaDB {
       // Load driver and build conn-string
       Class.forName( "com.mysql.jdbc.Driver" );
       String url = "jdbc:mysql://localhost:3306/" + this.database +
-              "?useUnicode=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
+              "?characterEncoding=latin1&useUnicode=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
 
       // Open connection
       this.conn = DriverManager.getConnection( url, this.username, this.password );

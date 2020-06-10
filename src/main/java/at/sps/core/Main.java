@@ -3,8 +3,8 @@ package at.sps.core;
 import at.sps.commands.Essentials;
 import at.sps.commands.HomeCmd;
 import at.sps.core.shortcmds.SCManager;
-import at.sps.core.storage.MariaDB;
-import at.sps.mappers.HomeMapper;
+import at.sps.core.orm.MariaDB;
+import at.sps.core.orm.mappers.HomeMapper;
 import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -49,6 +49,6 @@ public class Main extends JavaPlugin {
     db.connect();
 
     // Create all needed tables
-    db.buildTables( new HomeMapper( db ) );
+    db.buildTables( HomeMapper.getInst() );
   }
 }

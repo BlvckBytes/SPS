@@ -1,4 +1,4 @@
-package at.sps.core.storage;
+package at.sps.core.orm;
 
 public enum ActionResult {
 
