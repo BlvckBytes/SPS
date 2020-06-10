@@ -1,6 +1,8 @@
 package at.sps.core.orm.models;
 
 import at.sps.core.orm.MappableModel;
+import at.sps.core.orm.MapperColumn;
+import at.sps.core.orm.RebuilderColumns;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
@@ -11,16 +13,20 @@ import java.util.UUID;
 
 public class Warp extends MappableModel {
 
-  @Getter
-  private final String name;
+  @Getter @Setter
+  @MapperColumn( unique = true, length = "128" )
+  private String name;
 
   @Getter @Setter
+  @RebuilderColumns( fields = { "x", "y", "z", "yaw", "pitch", "world" } )
   private Location location;
 
   @Getter @Setter
+  @MapperColumn
   private long creationDate;
 
   @Getter @Setter
+  @MapperColumn( length = "40" )
   private UUID creator;
 
   /**

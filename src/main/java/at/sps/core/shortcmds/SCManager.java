@@ -16,9 +16,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class SCManager implements Listener {
 
@@ -76,6 +74,14 @@ public class SCManager implements Listener {
   }
 
   /**
+   * Get all known registered commands
+   * @return Set of strings representing the command names
+   */
+  public Set< String > getKnownCommands() {
+    return this.commands.keySet();
+  }
+
+  /**
    * Register a container of short commands, where annotated methods
    * get loaded and activated automatically
    * @param container Instance of container
@@ -125,6 +131,12 @@ public class SCManager implements Listener {
     }
   }
 
+  /**
+   * Register a new command which is tabbable and then calls the handle method on invocation
+   * @param cmd Command to listen for
+   * @param callHandle Command handle consisting of the annotation and it's method
+   * @param container Container of this method, to call on
+   */
   private void registerCommand( String cmd, Pair< ShortCommand, Method > callHandle, Object container ) {
     // Store command with it's call-handle and container into LUTs
     this.commands.put( cmd, callHandle );

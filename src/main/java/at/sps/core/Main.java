@@ -1,7 +1,9 @@
 package at.sps.core;
 
-import at.sps.commands.Essentials;
-import at.sps.commands.HomeCmd;
+import at.sps.commands.EssentialCmds;
+import at.sps.commands.HomeCmds;
+import at.sps.commands.WarpCmds;
+import at.sps.core.orm.mappers.WarpMapper;
 import at.sps.core.shortcmds.SCManager;
 import at.sps.core.orm.MariaDB;
 import at.sps.core.orm.mappers.HomeMapper;
@@ -13,6 +15,10 @@ public class Main extends JavaPlugin {
   @Getter
   private static MariaDB db;
 
+  @Getter
+  private static SCManager scM;
+
+  // On plugin load
   @Override
   public void onEnable() {
     // Standard enabling routines
@@ -22,6 +28,7 @@ public class Main extends JavaPlugin {
     ConsoleLogger.getInst().logMessage( "&aSystem initialized successfully!" );
   }
 
+  // On plugin unload
   @Override
   public void onDisable() {
     // Disconnect DB if existent
@@ -35,9 +42,10 @@ public class Main extends JavaPlugin {
    * Register all command containers to the short command manager
    */
   private void registerCommands() {
-    SCManager scMan = new SCManager( this );
-    scMan.registerContainer( new Essentials() );
-    scMan.registerContainer( new HomeCmd() );
+    scM = new SCManager( this );
+    scM.registerContainer( new EssentialCmds() );
+    scM.registerContainer( new HomeCmds() );
+    scM.registerContainer( new WarpCmds() );
   }
 
   /**
@@ -49,6 +57,6 @@ public class Main extends JavaPlugin {
     db.connect();
 
     // Create all needed tables
-    db.buildTables( HomeMapper.getInst() );
+    db.buildTables( HomeMapper.getInst(), WarpMapper.getInst() );
   }
 }

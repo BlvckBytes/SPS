@@ -9,7 +9,7 @@ import org.bukkit.entity.Player;
 
 import java.util.List;
 
-public class HomeCmd {
+public class HomeCmds {
 
     /**
      * Command: home
@@ -18,7 +18,6 @@ public class HomeCmd {
      */
     @ShortCommand( command = "home", terminalDeny = true )
     private void onHome( Player sender, String[] args ) {
-
         // No name provided
         if( args.length != 1 ) {
             sender.sendMessage( GlobalConstants.PREFIX + "§cBenutze: /home <Name>" );

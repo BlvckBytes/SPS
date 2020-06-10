@@ -3,7 +3,6 @@ package at.sps.core.orm;
 import at.sps.core.ConsoleLogger;
 import at.sps.core.utils.ParamFuncCB;
 import at.sps.core.utils.Utils;
-import sun.nio.ch.Util;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -19,13 +18,16 @@ public abstract class ModelMapper< T extends MappableModel > {
   private LinkedList< ColInfo > tableFields;
 
   /**
-   * Create a new model mapper, the base construct of every mapper used
-   *@param database Database for queries
+   * Create a new model mapper, the base construct of every mapper used. Delete is being
+   * performed completely on an automatic basis, write may need the help of write translators.
+   * Read can get too complicated and is thus forced to be implemented by the model itself.
+   * @param database Database instance for queries
    */
   public ModelMapper( MariaDB database ) {
     this.database = database;
     this.writeTranslators = new HashMap<>();
 
+    // Fetch a list of ColInfo objects for mapping later on, used multiple times
     try {
       tableFields = findFields( getModelClass() );
     } catch ( Exception e ) {
@@ -45,7 +47,7 @@ public abstract class ModelMapper< T extends MappableModel > {
    * Writes a list of T typed elements into the database
    * @param element Element to write or update
    * @param update Whether or not to use the updating feature
-   * @return True on query success, false otherwise
+   * @return ActionResult with the exit state
    */
   public ActionResult write( T element, boolean update ) {
     // No data provided
@@ -57,7 +59,8 @@ public abstract class ModelMapper< T extends MappableModel > {
       Object[] data = new Object[ tableFields.size() - 1 ];
 
       // Create list of questionmark placeholders for tablefields
-      StringBuilder query = new StringBuilder( "INSERT INTO `Home` (" );
+      String name = getModelClass().getSimpleName();
+      StringBuilder query = new StringBuilder( "INSERT INTO `" + name + "` (" );
 
       // Append col names and build values placeholders simultaneously
       StringBuilder values = new StringBuilder( " VALUES (" );
@@ -103,11 +106,12 @@ public abstract class ModelMapper< T extends MappableModel > {
       database.executeUpdate( query.toString() + ";", data );
       return ActionResult.OK;
     } catch ( SQLIntegrityConstraintViolationException e2 ) {
-      e2.printStackTrace();
+      // When constraints get violated, it should always mean that it's a duplicate update or insert, since
+      // the only constraint auto-created is the key constraint
       return ActionResult.ALREADY_EXISTENT;
     } catch ( Exception e ) {
       ConsoleLogger.getInst().logMessage( "&cError while writing a model to db!" );
-      ConsoleLogger.getInst().logMessage( Utils.stringifyException( e ) );
+      ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
       return ActionResult.INTERNAL_ERROR;
     }
   }
@@ -139,13 +143,13 @@ public abstract class ModelMapper< T extends MappableModel > {
    */
   private Object getFieldValue( Object element, Field field ) {
     try {
+      // Loop all fields from the holder and make them accessible
       for( Field f : element.getClass().getDeclaredFields() ) {
         f.setAccessible( true );
 
         // Field found on current level
-        if( f.equals( field ) ) {
+        if( f.equals( field ) )
           return f.get( element );
-        }
 
         // Not annotated, ignore since recursions could go wild otherwise
         if( !( f.getDeclaredAnnotation( MapperColumn.class ) != null || f.getDeclaredAnnotation( RebuilderColumns.class ) != null ) )
@@ -155,7 +159,7 @@ public abstract class ModelMapper< T extends MappableModel > {
         if( f.getType().isPrimitive() )
           continue;
 
-        // Search on that element's level
+        // Search on that element's level, return only if retrieved value isn't null
         Object ret = getFieldValue( f.get( element ), field );
         if( ret != null )
           return ret;
@@ -185,6 +189,7 @@ public abstract class ModelMapper< T extends MappableModel > {
       String name = modelClass.getSimpleName();
       List< ColInfo > keys = tableFields.stream().filter( ColInfo::isUnique ).collect( Collectors.toList() );
 
+      // Build query and corresponding data buffer
       LinkedList< Object > data = new LinkedList<>();
       StringBuilder query = new StringBuilder( "DELETE FROM `" + name + "` WHERE " );
 
@@ -202,17 +207,23 @@ public abstract class ModelMapper< T extends MappableModel > {
           query.append( "OR" );
 
         // Append item's condition and parameters
-        query.append( "( `ID` = ? AND `name` = ? AND `uuid` = ? )" );
+        query.append( "( `ID` = ?" );
 
         // Append primary key, then all key values
         data.add( currE.getID() );
-        for ( ColInfo key : keys )
+        for ( ColInfo key : keys ) {
+          query.append( " AND `" ).append( key.getName() ).append( "` = ?" );
           data.add( tryTranslate( key.getTarget().get( currE ) ) );
+        }
 
+        // Implemented deletion element
         added++;
       }
 
-      // If no rows were affected, data didn't exist
+      // Close query
+      query.append( ");" );
+
+      // If no rows were affected, data didn't exist, otherwise at least something got deleted
       if( added == 0 || database.executeUpdate( query.toString(), data.toArray( new Object[ 0 ] ) ) == 0 )
         return ActionResult.NON_EXISTENT;
 
@@ -226,8 +237,8 @@ public abstract class ModelMapper< T extends MappableModel > {
   }
 
   /**
-   * Gets called from the database object to build the table
-   * needed for this model, builds it automatically
+   * Gets called from the database object to build the table needed for
+   * this model, builds it automatically based on the annotated fields
    * @throws Exception Error on execution
    */
   public void buildTable() throws Exception {
@@ -238,17 +249,19 @@ public abstract class ModelMapper< T extends MappableModel > {
     // Add primary key ID, since that'll be always present
     query.append( "`ID` INT(32) NOT NULL AUTO_INCREMENT, PRIMARY KEY(`ID`)" );
 
+    // Build key constraint simultaneously
     List< String > colNames = new ArrayList<>();
-
     StringBuilder keys = new StringBuilder( ", CONSTRAINT UC_" + name + " UNIQUE (" );
     int keyC = 0;
 
+    // Loop the table's fields
     for( ColInfo ci : tableFields ) {
 
       // Skip ID field, since that has been specified above in a more particular way
       if( ci.getName().equalsIgnoreCase( "id" ) )
         continue;
 
+      // Unique -> Add to key constraint
       if( ci.isUnique() ) {
         keys.append( keyC == 0 ? "" : "," ).append( ci.getName() );
         keyC++;
@@ -297,7 +310,7 @@ public abstract class ModelMapper< T extends MappableModel > {
     String cName = annoName.equals( "" ) ? f.getName() : annoName;
     String length = len.equals( "" ) ? "" : "(" + len + ")";
 
-    // If it would be a varchar but no length has been specified, make it text
+    // If it would be a varchar but no length has been specified, make it text (dynamic)
     String type = getSQLDatatype( f );
     type = len.equals( "" ) && type.equals( "VARCHAR" ) ? "TEXT" : type;
 
@@ -330,7 +343,8 @@ public abstract class ModelMapper< T extends MappableModel > {
   }
 
   /**
-   * Find all fields specified by annotations for further processing
+   * Find all fields specified by annotations for further processing recursively, adds
+   * the ID field from @{@link MappableModel} superclass manually
    * @param target Target class to search in
    * @return List of column info objects
    * @throws Exception Error during search
@@ -353,7 +367,7 @@ public abstract class ModelMapper< T extends MappableModel > {
    * @return List of fields
    */
   private LinkedList< ColInfo > findFieldsR( Class< ? > target, RebuilderColumns parent ) {
-    // Create the array of fields, this class' id field + all fields from model
+    // Create the array of fields, this class' id field + all from model
     LinkedList< ColInfo > fields = new LinkedList<>();
 
     // List of names the parent specifies, fill up with null values to use set at index for proper order
@@ -416,6 +430,11 @@ public abstract class ModelMapper< T extends MappableModel > {
     return fields;
   }
 
+  /**
+   * Register a data translator for writing this field to DB
+   * @param type Type to use this translator on
+   * @param func Function for I/O
+   */
   protected void registerTranslator( Class< ? > type, ParamFuncCB< Object, String > func ) {
     this.writeTranslators.put( type, func );
   }

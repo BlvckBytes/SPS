@@ -29,7 +29,7 @@ public class HomeMapper extends ModelMapper< Home > {
         super( database );
         inst = this;
 
-        // Register world translator to get the world's name
+        // Register world translator to get the world's name, UUID translator to perform toString
         registerTranslator( World.class, val -> ( ( World ) val ).getName() );
         registerTranslator( UUID.class, Object::toString );
     }

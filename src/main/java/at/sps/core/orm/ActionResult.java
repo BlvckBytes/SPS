@@ -1,5 +1,9 @@
 package at.sps.core.orm;
 
+/**
+ * Represents the result of a action performed on a model
+ * More concrete: read, write / update, delete
+ */
 public enum ActionResult {
 
   // Inserting / updating was successful

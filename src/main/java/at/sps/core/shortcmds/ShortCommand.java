@@ -4,7 +4,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * Describes how a command is structured internally
+ * Describes how a short command is structured internally
  */
 @Retention( RetentionPolicy.RUNTIME )
 public @interface ShortCommand {

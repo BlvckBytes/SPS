@@ -16,7 +16,8 @@ public class ColInfo {
   private final Field target;
 
   /**
-   * Represents information about a mapped column for r/W
+   * Represents information about a mapped column for r/w, contains SQL column
+   * informations and the model target field reference for data reading
    * @param name Name of the column
    * @param type Datatype of the column
    * @param length Length of the datatype

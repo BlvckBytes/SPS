@@ -6,14 +6,13 @@ import at.sps.core.orm.ActionResult;
 import at.sps.core.orm.MariaDB;
 import at.sps.core.orm.ModelMapper;
 import at.sps.core.orm.ObjectRebuilder;
-import at.sps.core.utils.Utils;
 import at.sps.core.orm.models.Warp;
+import at.sps.core.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 
 import java.sql.ResultSet;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -30,24 +29,43 @@ public class WarpMapper extends ModelMapper< Warp > {
   public WarpMapper( MariaDB database ) {
     super( database );
     inst = this;
+
+    // Register world translator to get the world's name, UUID translator to perform toString
+    registerTranslator( World.class, val -> ( ( World ) val ).getName() );
+    registerTranslator( UUID.class, Object::toString );
   }
 
+  /**
+   * Add a new warp to the storage
+   * @param warp Warp to store
+   * @return ActionResult which tells the status
+   */
   public ActionResult addWarp( Warp warp ) {
     return write( warp, false );
   }
 
-  public ActionResult deleteWarp( Warp warp ) {
-    return delete( Collections.singletonList( warp ) );
+  /**
+   * Remove an existing warp from the storage
+   * @param name The target warp's name
+   * @return ActionResult which tells the status
+   */
+  public ActionResult removeWarp( String name ) {
+    return delete( Collections.singletonList( getByName( name ) ) );
   }
 
+  /**
+   * Update an existing warp, for re-setting the location f.e.
+   * @param warp Warp to update in DB
+   * @return ActionResult which tells the status
+   */
   public ActionResult updateWarp( Warp warp ) {
     return write( warp, true );
   }
 
   /**
-   * Search a home by it's name, the name is primary key and can only exist once
-   * @param name Name of the target home
-   * @return Home if exists, null otherwise
+   * Search a warp by it's name, the name is primary key and can only exist once
+   * @param name Name of the target warp
+   * @return Warp if exists, null otherwise
    */
   public Warp getByName( String name ) {
     try {
@@ -77,7 +95,7 @@ public class WarpMapper extends ModelMapper< Warp > {
       // Fetch result to get only the warps containing the searchterm
       return read( database.fetchResult(
         "SELECT * FROM `Warp`" +
-        "WHERE LOWER(`name`) LIKE LOWER('%?%')",
+        "WHERE LOWER(`name`) LIKE LOWER(CONCAT('%', ?, '%'))",
         searchterm
       ) );
     } catch ( Exception e ) {
@@ -90,7 +108,7 @@ public class WarpMapper extends ModelMapper< Warp > {
   /**
    * Read warps from the database
    * @param rs ResultSet from an executed query
-   * @return List of generated homes
+   * @return List of generated warps
    */
   @Override
   public List< Warp > read( ResultSet rs ) {
@@ -108,10 +126,14 @@ public class WarpMapper extends ModelMapper< Warp > {
                 .addColumns( "x", "y", "z", "yaw", "pitch" )
                 .build();
 
-        // Fetch uuid and generate Home object into buffer list
+        // Fetch uuid and generate warp object into buffer list
         UUID uu = UUID.fromString( rs.getString( "creator" ) );
         long creationDate = rs.getLong( "creationdate" );
-        buf.add( new Warp( rs.getString( "name" ), loc, creationDate, uu ) );
+        Warp warp = new Warp( rs.getString( "name" ), loc, creationDate, uu );
+
+        // Set ID and add warp to list
+        warp.setID( rs.getInt( "ID" ) );
+        buf.add( warp );
       }
     } catch ( Exception e ) {
       ConsoleLogger.getInst().logMessage( "&cError while mapping read warps!" );
@@ -119,49 +141,6 @@ public class WarpMapper extends ModelMapper< Warp > {
     }
 
     return buf;
-  }
-
-  /**
-   * Write a warp into the database
-   * @param update Whether or not to use the updating feature
-   * @param element Element to write or update
-   */
-  @Override
-  public ActionResult write( Warp element, boolean update ) {
-    // No data provided
-    if( element == null )
-      return ActionResult.NO_DATA;
-
-    try {
-      // Create an array of the element's row values
-      Location loc = element.getLocation();
-      Object[] data = {
-        element.getName(), element.getCreator().toString(), element.getCreationDate(), loc.getX(),
-        loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch(), loc.getWorld().getName()
-      };
-
-      // TODO: int insertOrUpdate( String[] keys, Object[] data, boolean update, String... columns ) throws Exception
-      // Example: insertOrUpdate( new String[]{ "name" }, data, "x", "y", "z", "yaw", "pitch", "world" );
-
-      // Values are: name, uuid, x, y, z, yaw, pitch, world
-      String query = "INSERT INTO `Warp` VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-      // Only add the duplicate key update if desired
-      if( update ) {
-        query += "ON DUPLICATE KEY UPDATE creator = VALUES(creator), creationdate = VALUES(creationdate)," +
-                "x = VALUES(x), y = VALUES(y), z = VALUES(z), yaw = VALUES(yaw), pitch = VALUES(pitch)," +
-                "world = VALUES(world)";
-      }
-
-      database.executeUpdate( query, data );
-      return ActionResult.OK;
-    } catch ( SQLIntegrityConstraintViolationException e2 ) {
-      return ActionResult.ALREADY_EXISTENT;
-    } catch ( Exception e ) {
-      ConsoleLogger.getInst().logMessage( "&cError while writing warp!" );
-      ConsoleLogger.getInst().logMessage( Utils.stringifyException( e ) );
-      return ActionResult.INTERNAL_ERROR;
-    }
   }
 
   /**

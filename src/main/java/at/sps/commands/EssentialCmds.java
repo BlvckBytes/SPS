@@ -1,26 +1,26 @@
 package at.sps.commands;
 
-import at.sps.core.ConsoleLogger;
 import at.sps.core.GlobalConstants;
+import at.sps.core.Main;
 import at.sps.core.shortcmds.ShortCommand;
 import at.sps.core.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
-import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
-public class Essentials {
+public class EssentialCmds {
 
   private final Map< Player, Player > msgPartners;
 
   /**
    * Essential commands holder, create all maps and lists
    */
-  public Essentials() {
+  public EssentialCmds() {
     this.msgPartners = new HashMap<>();
   }
 
@@ -224,5 +224,25 @@ public class Essentials {
         " §7erfolgreich auf §d" + newStateName + " §7geändert!"
       );
     }
+  }
+
+  /**
+   * Command: sps
+   * Usage: /sps
+   * Used to list all known commands of the SPS
+   */
+  @ShortCommand( command = "sps" )
+  private void onSPS( CommandSender sender, String[] args ) {
+    Set< String > commands = Main.getScM().getKnownCommands();
+    StringBuilder message = new StringBuilder( GlobalConstants.PREFIX + "§7Registrierte Befehle: " );
+
+    // Build list of commands inline
+    int c = 0;
+    for( String command : commands ) {
+      message.append( c == 0 ? "" : "§7, " ).append( "§d/" ).append( command );
+      c++;
+    }
+
+    sender.sendMessage( message.toString() );
   }
 }
