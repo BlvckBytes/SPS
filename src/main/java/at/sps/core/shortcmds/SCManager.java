@@ -1,10 +1,11 @@
 package at.sps.core.shortcmds;
 
 import at.sps.core.ConsoleLogger;
-import at.sps.core.GlobalConstants;
+import at.sps.core.conf.Messages;
 import at.sps.core.utils.Pair;
 import at.sps.core.utils.ParamCall;
 import at.sps.core.utils.Utils;
+import jdk.nashorn.internal.runtime.GlobalConstants;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
@@ -16,7 +17,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class SCManager implements Listener {
 
@@ -148,7 +152,7 @@ public class SCManager implements Listener {
     registerTab( cmd, dataPair -> {
       // Terminal invocation is denied
       if( targAnno.terminalDeny() ) {
-        ConsoleLogger.getInst().logMessage( "&c" + GlobalConstants.PLAYER_ONLY.toString() );
+        ConsoleLogger.getInst().logMessage( Messages.PLAYER_ONLY.apply( cmd ) );
         return;
       }
 

@@ -2,13 +2,19 @@ package at.sps.core;
 
 import at.sps.commands.EssentialCmds;
 import at.sps.commands.HomeCmds;
+import at.sps.commands.KitCmds;
 import at.sps.commands.WarpCmds;
+import at.sps.core.conf.Messages;
+import at.sps.core.conf.SPSConfig;
+import at.sps.core.orm.mappers.KitMapper;
 import at.sps.core.orm.mappers.WarpMapper;
 import at.sps.core.shortcmds.SCManager;
 import at.sps.core.orm.MariaDB;
 import at.sps.core.orm.mappers.HomeMapper;
 import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
 
 public class Main extends JavaPlugin {
 
@@ -46,6 +52,7 @@ public class Main extends JavaPlugin {
     scM.registerContainer( new EssentialCmds() );
     scM.registerContainer( new HomeCmds() );
     scM.registerContainer( new WarpCmds() );
+    scM.registerContainer( new KitCmds() );
   }
 
   /**
@@ -57,6 +64,9 @@ public class Main extends JavaPlugin {
     db.connect();
 
     // Create all needed tables
-    db.buildTables( HomeMapper.getInst(), WarpMapper.getInst() );
+    db.buildTables( HomeMapper.getInst(), WarpMapper.getInst(), KitMapper.getInst() );
+
+    // Create and load config file, this is not used anywhere else ATM
+    new SPSConfig( new File( getDataFolder(), "config.yml" ) );
   }
 }

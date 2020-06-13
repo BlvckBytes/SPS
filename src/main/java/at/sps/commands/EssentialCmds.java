@@ -1,7 +1,7 @@
 package at.sps.commands;
 
-import at.sps.core.GlobalConstants;
 import at.sps.core.Main;
+import at.sps.core.conf.Messages;
 import at.sps.core.shortcmds.ShortCommand;
 import at.sps.core.utils.Utils;
 import org.bukkit.Bukkit;
@@ -34,21 +34,21 @@ public class EssentialCmds {
 
     // No recipient or no message specified
     if ( args.length <= 1 ) {
-      sender.sendMessage( GlobalConstants.PREFIX + "§cBenutze: /msg <Empfänger> <Nachricht>" );
+      sender.sendMessage( Messages.USAGE.apply( "/msg <Empfänger> <Nachricht>" ) );
       return;
     }
 
     // Make sure the recipient is online
     Player target = Bukkit.getPlayer( args[ 0 ] );
     if ( target == null ) {
-      sender.sendMessage( GlobalConstants.PREFIX + "§cDer Spieler '" + args[ 0 ] + "' ist nicht online!" );
+      sender.sendMessage( Messages.NOT_ONLINE.apply( args[ 0 ] ) );
       return;
     }
 
     // Send out messages
     String msg = Utils.concatArgs( args, 1 );
-    sender.sendMessage( GlobalConstants.PREFIX + "§6Du §7» §6" + target.getDisplayName() + "§7: " + msg );
-    target.sendMessage( GlobalConstants.PREFIX + "§6" + sender.getDisplayName() + " §7» §6Dich§7: " + msg );
+    sender.sendMessage( Messages.MSG_OUT.apply( target.getDisplayName(), msg ) );
+    sender.sendMessage( Messages.MSG_IN.apply( sender.getDisplayName(), msg ) );
 
     // Keep last recipient in buffer
     this.msgPartners.put( sender, target );
@@ -66,26 +66,28 @@ public class EssentialCmds {
     // No recipient in buffer yet
     Player partner = this.msgPartners.get( sender );
     if ( partner == null ) {
-      sender.sendMessage( GlobalConstants.PREFIX + "§cDir hat noch niemand geschrieben, dem du antworten kannst!" );
+      sender.sendMessage( Messages.NO_MSG_PARTNER.apply() );
       return;
     }
 
     // Recipient went offline
     if ( !partner.isOnline() ) {
-      sender.sendMessage( GlobalConstants.PREFIX + "§cDer Spieler '" + partner.getDisplayName() + "' ist in der Zwischenzeit offline gegangen!" );
+      sender.sendMessage( Messages.WENT_OFFLINE.apply( partner.getDisplayName() ) );
+      msgPartners.remove( sender );
+      msgPartners.remove( partner );
       return;
     }
 
     // No message specified
     if ( args.length == 0 ) {
-      sender.sendMessage( GlobalConstants.PREFIX + "§cBenutze: /r <Nachricht>" );
+      sender.sendMessage( Messages.USAGE.apply( "/r <Nachricht>" ) );
       return;
     }
 
     // Send out messages
     String msg = Utils.concatArgs( args, 0 );
-    sender.sendMessage( GlobalConstants.PREFIX + "§6Du §7» §6" + partner.getDisplayName() + "§7: " + msg );
-    partner.sendMessage( GlobalConstants.PREFIX + "§6" + sender.getDisplayName() + " §7» §6Dich§7: " + msg );
+    sender.sendMessage( Messages.MSG_OUT.apply( partner.getDisplayName(), msg ) );
+    sender.sendMessage( Messages.MSG_IN.apply( sender.getDisplayName(), msg ) );
   }
 
   /**
@@ -98,13 +100,13 @@ public class EssentialCmds {
 
     // No permission
     if ( !sender.hasPermission( "sps.gm" ) ) {
-      sender.sendMessage( GlobalConstants.PREFIX.toString() + GlobalConstants.NO_PERM );
+      sender.sendMessage( Messages.NO_PERM.apply( "sps.gm" ) );
       return;
     }
 
     // No args specified
     if ( args.length == 0 ) {
-      sender.sendMessage( GlobalConstants.PREFIX + "Benutze: /" + label + " <Modus> [Spieler]" );
+      sender.sendMessage( Messages.USAGE.apply( "/" + label + " <Modus> [Spieler]" ) );
       return;
     }
 
@@ -114,7 +116,7 @@ public class EssentialCmds {
 
     // Invalid gamemode
     if ( gm == null ) {
-      sender.sendMessage( GlobalConstants.PREFIX + "§cUngültiger Modus angegeben (" + args[ 0 ] + ")!" );
+      sender.sendMessage( Messages.INVALID_GM.apply( args[ 0 ] ) );
       return;
     }
 
@@ -125,38 +127,28 @@ public class EssentialCmds {
 
       // No permission
       if( !sender.hasPermission( "sps.gm.other" ) ) {
-        sender.sendMessage( GlobalConstants.PREFIX.toString() + GlobalConstants.NO_PERM );
+        sender.sendMessage( Messages.NO_PERM.apply( "sps.gm.other" ) );
         return;
       }
 
       Player target = Bukkit.getPlayer( args[ 1 ] );
       target.setGameMode( gm );
 
-      // Notify target
-      target.sendMessage(
-        GlobalConstants.PREFIX + "Dein §dGameMode §7wurde von §d" + executor +
-        " §7auf §d" + gm.name() + " §7geändert!"
-      );
-
-      // Notify executor
-      sender.sendMessage(
-        GlobalConstants.PREFIX + "Du hast den §dGameMode §7von §d" + target.getDisplayName() +
-        " §7erfolgreich auf §d" + gm.name() + " §7geändert!"
-      );
-
+      // Notify players
+      target.sendMessage( Messages.GM_CHANGED_TARGET.apply( executor, gm.name() ) );
+      sender.sendMessage( Messages.GM_CHANGED_EXECUTOR.apply( target.getDisplayName(), gm.name() ) );
       return;
     }
 
     // No player, can't change gm of console...
     if( executor.equals( "Console" ) ) {
-      sender.sendMessage( GlobalConstants.PREFIX + "§c" + GlobalConstants.PLAYER_ONLY.toString() );
+      sender.sendMessage( Messages.PLAYER_ONLY.apply( label ) );
       return;
     }
 
-    // Change for the executor himself, since no target was specified
+    // Change for the executor himself, since no target was specified, also notify
     ( ( Player ) sender ).setGameMode( gm );
-    // Notify executor
-    sender.sendMessage( GlobalConstants.PREFIX + "Du hast deinen §dGameMode §7auf §d" + gm.name() + " §7geändert!" );
+    sender.sendMessage( Messages.GM_CHANGED.apply( gm.name() ) );
   }
 
   /**
@@ -169,7 +161,7 @@ public class EssentialCmds {
 
     // No permission
     if ( !sender.hasPermission( "sps.fly" ) ) {
-      sender.sendMessage( GlobalConstants.PREFIX.toString() + GlobalConstants.NO_PERM.toString() );
+      sender.sendMessage( Messages.NO_PERM.apply( "sps.fly" ) );
       return;
     }
 
@@ -180,15 +172,15 @@ public class EssentialCmds {
 
       // No player, can't toggle fly of console...
       if( executor.equals( "Console" ) ) {
-        sender.sendMessage( GlobalConstants.PREFIX + "§c" + GlobalConstants.PLAYER_ONLY.toString() );
+        sender.sendMessage( Messages.PLAYER_ONLY.apply( "fly" ) );
         return;
       }
 
-      // Toggle state
+      // Toggle state and notify
       Player exec = ( Player ) sender;
       boolean newState = !exec.getAllowFlight();
       exec.setAllowFlight( newState );
-      sender.sendMessage( GlobalConstants.PREFIX + "Du hast deinen §dFlymode §7auf §d" + ( newState ? "an" : "aus" ) + " §7geändert!" );
+      sender.sendMessage( Messages.FLY_CHANGED.apply( ( newState ? "an" : "aus" ) ) );
       return;
     }
 
@@ -196,14 +188,14 @@ public class EssentialCmds {
     if ( args.length == 1 ) {
       // No permission
       if ( !sender.hasPermission( "sps.fly.other" ) ) {
-        sender.sendMessage( GlobalConstants.PREFIX.toString() + GlobalConstants.NO_PERM );
+        sender.sendMessage( Messages.NO_PERM.apply( "sps.fly.other" ) );
         return;
       }
 
       // Check if target is online
       Player target = Bukkit.getPlayer( args[ 0 ] );
       if( target == null ) {
-        sender.sendMessage( GlobalConstants.PREFIX + "§cDer Spieler '" + args[ 0 ] + "' ist nicht online!" );
+        sender.sendMessage( Messages.NOT_ONLINE.apply( args[ 0 ] ) );
         return;
       }
 
@@ -212,17 +204,9 @@ public class EssentialCmds {
       String newStateName = newState ? "an" : "aus";
       target.setAllowFlight( newState );
 
-      // Notify target
-      target.sendMessage(
-        GlobalConstants.PREFIX + "Dein §dFlugmodus §7wurde von §d" + executor +
-        " §7auf §d" + newStateName + " §7geändert!"
-      );
-
-      // Notify executor
-      sender.sendMessage(
-        GlobalConstants.PREFIX + "Du hast den §dFlugmodus §7von §d" + target.getDisplayName() +
-        " §7erfolgreich auf §d" + newStateName + " §7geändert!"
-      );
+      // Notify players
+      target.sendMessage( Messages.FLY_CHANGED_TARGET.apply( executor, newStateName ) );
+      sender.sendMessage( Messages.FLY_CHANGED_EXECUTOR.apply( target.getDisplayName(), newStateName ) );
     }
   }
 
@@ -234,15 +218,15 @@ public class EssentialCmds {
   @ShortCommand( command = "sps" )
   private void onSPS( CommandSender sender, String[] args ) {
     Set< String > commands = Main.getScM().getKnownCommands();
-    StringBuilder message = new StringBuilder( GlobalConstants.PREFIX + "§7Registrierte Befehle: " );
+    StringBuilder list = new StringBuilder();
 
     // Build list of commands inline
     int c = 0;
     for( String command : commands ) {
-      message.append( c == 0 ? "" : "§7, " ).append( "§d/" ).append( command );
+      list.append( c == 0 ? "" : Messages.SPS_DELIMITER.getTemplate() ).append( "/" ).append( command );
       c++;
     }
 
-    sender.sendMessage( message.toString() );
+    sender.sendMessage( Messages.SPS_LIST.apply( list.toString() ) );
   }
 }

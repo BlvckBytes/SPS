@@ -1,6 +1,6 @@
 package at.sps.commands;
 
-import at.sps.core.GlobalConstants;
+import at.sps.core.conf.Messages;
 import at.sps.core.orm.ActionResult;
 import at.sps.core.orm.mappers.WarpMapper;
 import at.sps.core.orm.models.Warp;
@@ -20,7 +20,7 @@ public class WarpCmds {
   private void onWarp( Player sender, String[] args ) {
     // No name provided
     if( args.length != 1 ) {
-      sender.sendMessage( GlobalConstants.PREFIX + "§cBenutze: /warp <Name>" );
+      sender.sendMessage( Messages.USAGE.apply( "/warp <Name>" ) );
       return;
     }
 
@@ -29,13 +29,13 @@ public class WarpCmds {
 
     // Home non existent
     if( target == null ) {
-      sender.sendMessage( GlobalConstants.PREFIX + "§7Der warp §d" + args[ 0 ] + " §7existiert nicht!" );
+      sender.sendMessage( Messages.WARP_NON_EXISTING.apply( args[ 0 ] ) );
       return;
     }
 
     // Teleport to his home
     sender.teleport( target.getLocation() );
-    sender.sendMessage( GlobalConstants.PREFIX + "§7Du wurdest erfolgreich zum warp §d" + target.getName() + " §7teleportiert!" );
+    sender.sendMessage( Messages.WARP_TELEPORT.apply( target.getName() ) );
   }
 
   /**
@@ -47,7 +47,7 @@ public class WarpCmds {
   private void onSetwarp( Player sender, String[] args ) {
     // No name provided
     if( args.length != 1 ) {
-      sender.sendMessage( GlobalConstants.PREFIX + "§cBenutze: /setwarp <Name>" );
+      sender.sendMessage( Messages.USAGE.apply( "/setwarp <Name>" ) );
       return;
     }
 
@@ -55,20 +55,19 @@ public class WarpCmds {
     ActionResult result = WarpMapper.getInst().addWarp( added );
 
     switch ( result ) {
-
-      // Home added
+      // Warp added
       case OK:
-        sender.sendMessage( GlobalConstants.PREFIX + "§7Der warp §d" + added.getName() + " §7wurde erfolgreich erstellt!" );
+        sender.sendMessage( Messages.WARP_CREATED.apply( added.getName() ) );
         break;
 
       // Name is already existent
       case ALREADY_EXISTENT:
-        sender.sendMessage( GlobalConstants.PREFIX + "§7Der warp §d" + added.getName() + " §7existiert bereits!" );
+        sender.sendMessage( Messages.WARP_EXISTING.apply( added.getName() ) );
         break;
 
       // Error
       default:
-        sender.sendMessage( GlobalConstants.PREFIX.toString() + GlobalConstants.INTERNAL_ERROR + " (" + result + ")" );
+        sender.sendMessage( Messages.INTERNAL_ERR.apply( "WARPCR->" + result ) );
         break;
     }
   }
@@ -82,7 +81,7 @@ public class WarpCmds {
   private void onDelwarp( Player sender, String[] args ) {
     // No name provided
     if( args.length != 1 ) {
-      sender.sendMessage( GlobalConstants.PREFIX + "§cBenutze: /delwarp <Name>" );
+      sender.sendMessage( Messages.USAGE.apply( "/delwarp <Name>" ) );
       return;
     }
 
@@ -90,20 +89,19 @@ public class WarpCmds {
     ActionResult result = WarpMapper.getInst().removeWarp( args[ 0 ] );
 
     switch ( result ) {
-
-      // Home deleted
+      // Warp deleted
       case OK:
-        sender.sendMessage( GlobalConstants.PREFIX + "§7Der warp §d" + args[ 0 ] + " §7wurde erfolgreich gelöscht!" );
+        sender.sendMessage( Messages.WARP_DELETED.apply( args[ 0 ] ) );
         break;
 
       // Name is not existent
       case NON_EXISTENT:
-        sender.sendMessage( GlobalConstants.PREFIX + "§7Der warp §d" + args[ 0 ] + " §7existiert nicht!" );
+        sender.sendMessage( Messages.WARP_NON_EXISTING.apply( args[ 0 ] ) );
         break;
 
       // Error
       default:
-        sender.sendMessage( GlobalConstants.PREFIX.toString() + GlobalConstants.INTERNAL_ERROR + " (" + result + ")" );
+        sender.sendMessage( Messages.INTERNAL_ERR.apply( "WARPDL->" + result ) );
         break;
     }
   }
@@ -117,7 +115,7 @@ public class WarpCmds {
   private void onUpdatewarp( Player sender, String[] args ) {
     // No name provided
     if( args.length != 1 ) {
-      sender.sendMessage( GlobalConstants.PREFIX + "§cBenutze: /updatewarp <Name>" );
+      sender.sendMessage( Messages.USAGE.apply( "/updatewarp <Name>" ) );
       return;
     }
 
@@ -126,7 +124,7 @@ public class WarpCmds {
 
     // Warp non existent
     if( target == null ) {
-      sender.sendMessage( GlobalConstants.PREFIX + "§7Der warp §d" + args[ 0 ] + " §7existiert nicht!" );
+      sender.sendMessage( Messages.WARP_NON_EXISTING.apply( args[ 0 ] ) );
       return;
     }
 
@@ -135,20 +133,19 @@ public class WarpCmds {
     ActionResult result = WarpMapper.getInst().updateWarp( target );
 
     switch ( result ) {
-
-      // Home deleted
+      // Warp updated
       case OK:
-        sender.sendMessage( GlobalConstants.PREFIX + "§7Der warp §d" + args[ 0 ] + " §7wurde erfolgreich geändert!" );
+        sender.sendMessage( Messages.WARP_UPDATED.apply( args[ 0 ] ) );
         break;
 
       // Name is not existent
       case NON_EXISTENT:
-        sender.sendMessage( GlobalConstants.PREFIX + "§7Der warp §d" + args[ 0 ] + " §7existiert nicht!" );
+        sender.sendMessage( Messages.WARP_NON_EXISTING.apply( args[ 0 ] ) );
         break;
 
       // Error
       default:
-        sender.sendMessage( GlobalConstants.PREFIX.toString() + GlobalConstants.INTERNAL_ERROR + " (" + result + ")" );
+        sender.sendMessage( Messages.INTERNAL_ERR.apply( "WARPUPD->" + result ) );
         break;
     }
   }
@@ -166,20 +163,20 @@ public class WarpCmds {
     List< Warp > warps = WarpMapper.getInst().listWarps( searchterm );
 
     // Build message
-    StringBuilder sb = new StringBuilder( "§7Verfügbare Warps: " );
+    StringBuilder list = new StringBuilder();
 
     // No warps found
     if( warps.size() == 0 ) {
-      sender.sendMessage( GlobalConstants.PREFIX + sb.toString() + "§cKeine Warps gesetzt!" );
+      sender.sendMessage( Messages.WARP_LIST.apply( Messages.WARP_NONE.apply() ) );
       return;
     }
 
     // Build home list
-    sb.append( "§d" ).append( warps.get( 0 ).getName() );
+    list.append( warps.get( 0 ).getName() );
     for( int i = 1; i < warps.size(); i++ )
-      sb.append( "§7, §d" ).append( warps.get( i ).getName() );
+      list.append( Messages.WARP_DELETED.apply() ).append( warps.get( i ).getName() );
 
     // Send list of available homes to the player
-    sender.sendMessage( GlobalConstants.PREFIX + sb.toString() );
+    sender.sendMessage( Messages.WARP_LIST.apply( list.toString() ) );
   }
 }

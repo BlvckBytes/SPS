@@ -1,5 +1,6 @@
 package at.sps.core;
 
+import at.sps.core.conf.Messages;
 import at.sps.core.utils.Utils;
 import org.bukkit.Bukkit;
 
@@ -23,7 +24,6 @@ public class ConsoleLogger {
     // Send a message to the console sender (console instance) with
     // translated color codes for easier use
     Bukkit.getConsoleSender().sendMessage(
-      GlobalConstants.PREFIX +
       Utils.translateColors( message )
     );
   }

@@ -1,0 +1,105 @@
+package at.sps.core.conf;
+
+import at.sps.core.utils.Utils;
+import lombok.Setter;
+
+public enum Messages {
+
+  PREFIX( "&5&lSPS &7┃ " ),
+  NO_PERM( "&7Dir fehlt das Recht &c${0} &7um diese Aktion zu tätigen!" ),
+  NOT_ONLINE( "&7Der Spieler &c${0} &7ist nicht online!" ),
+  PLAYER_ONLY( "&7Der Befehl &c${0}&7 kann nur als &cSpieler &7ausgeführt werden!" ),
+  INTERNAL_ERR( "&4Es trat ein interner Fehler auf, bitte melde den ERRCODE ${0}!" ),
+  USAGE( "&7Bitte benutze: &c${0}" ),
+  MSG_OUT( "&6Du &7» &6${0}&7: ${1}" ),
+  MSG_IN( "&6${0} &7» &6Dich&7: ${1}" ),
+  SPS_LIST( "&7Registrierte Befehle: &d${0}" ),
+  SPS_DELIMITER( "&7, &d" ),
+  NO_MSG_PARTNER( "&7Du hast leider noch &ckeine &7Nachrichten zum beantworten erhalten!" ),
+  WENT_OFFLINE( "&7Der Spieler &c${0} &7ist leider offline gegangen!" ),
+  INVALID_GM( "&7Du hast einen &cungültigen &7GameMode angegeben (${0})!" ),
+  GM_CHANGED( "&7Du hast deinen &dGameMode &7auf &d${0} &7geändert!" ),
+  GM_CHANGED_TARGET( "&7Dein &dGameMode §7wurde von &d${0} &7auf &d${1} &7geändert!" ),
+  GM_CHANGED_EXECUTOR( "&7Du hast den &dGameMode &7von &d${0} &7erfolgreich auf &d${1} &7geändert!" ),
+  FLY_CHANGED( "&7Du hast deinen &dFlugmodus &7auf &d${0} &7geändert!" ),
+  FLY_CHANGED_TARGET( "&7Dein &dFlugmodus §7wurde von &d${0} &7auf &d${1} &7geändert!" ),
+  FLY_CHANGED_EXECUTOR( "&7Du hast den &dFlugmodus &7von &d${0} &7erfolgreich auf &d${1} &7geändert!" ),
+  HOME_NON_EXISTENT( "&7Das Home &d${0} &7existiert nicht!" ),
+  HOME_TELEPORT( "&7Du wurdest erfolgreich zum Home &d${0} &7teleportiert!" ),
+  HOME_EXISTING( "&7Das Home &c${0} &7existiert bereits!" ),
+  HOME_CREATED( "&7Du hast das Home &d${0} &7erfolgreich erstellt!" ),
+  HOME_DELETED( "&7Du hast das Home &d${0} &7erfolgreich gelöscht!" ),
+  HOMES_LIST( "&7Deine Homes: &d${0}" ),
+  HOMES_NONE( "&cKeine Homes gesetzt!" ),
+  HOME_DELIMITER( "&7, &d" ),
+  KIT_NON_EXISTENT( "&7Das Kit &c${0} &7existiert nicht!" ),
+  KIT_EXISTING( "&7Das Kit &c${0} &7existiert bereits!" ),
+  KIT_RECEIVED( "&7Du hast das Kit &d${0} &7erhalten!" ),
+  KIT_DROPPED( "&7Du hattest leider &cnicht genug &7Platz im Inventar, daher wurden &c${0} &7Items &cgedroppt&7!" ),
+  KIT_CREATED( "&7Das Kit &d${0} &7wurde erfolgreich mit &d${1} &7Items angelegt!" ),
+  KIT_NO_ITEMS( "&7Du hast &ckeine Items &7im Inventar, um ein Kit zu erstellen!" ),
+  KIT_WRONG_COOLDOWN( "&7Bitte gib einen &cganzzahligen &7Coldown in Sekunden an!" ),
+  KIT_DELETED( "&7Das Kit &d${0} &7wurde erfolgreich gelöscht!" ),
+  KIT_UPDATED( "&7Das Kit &d${0} &7wurde erfolgreich geändert!" ),
+  KIT_LIST( "&7Verfügbare Kits: &d" ),
+  KIT_DELIMITER( "&7, &d" ),
+  KIT_COLOR( "&d" ),
+  KIT_NONE( "&cKeine Kits erstellt!" ),
+  KIT_LIST_HOVER( "&7Items: &d${0}&7, &7Beschreibung: &d${1}" ),
+  WARP_NON_EXISTING( "&7Der Warp &c${0} &7existiert nicht!" ),
+  WARP_TELEPORT( "&7Du wurdest erfolgreich zum Warp &d${0} &7teleportiert!" ),
+  WARP_CREATED( "&7Der Warp &d${0} &7wurde erfolgreich erstellt!" ),
+  WARP_EXISTING( "&7Der Warp &c${0} &7existiert bereits!" ),
+  WARP_DELETED( "&7Der Warp &d${0} &7wurde erfolgreich gelöscht!" ),
+  WARP_UPDATED( "&7Der Warp &d${0} &7wurde erfolgreich geändert!" ),
+  WARP_LIST( "&7Verfügbare Warps: &d${0}" ),
+  WARP_DELIMITER( "&7, &d" ),
+  WARP_NONE( "&cKeine Warps verfügbar!" );
+
+  @Setter
+  private String template;
+
+  /**
+   * Internal constructor to set the template string corresponding to the enum
+   */
+  Messages( String template ) {
+    this.template = template;
+  }
+
+  /**
+   * Apply placeholder texts to the message's markings, like ${x} where x
+   * is the index of the placeholder from parameters
+   * @param placeholders Array of values to put in placeholders
+   * @return String with translated colors and applied placeholders
+   */
+  public String applyPrefixless( Object... placeholders ) {
+    String result = template;
+
+    // Apply placeholders by their index
+    int c = 0;
+    for( Object ph : placeholders ) {
+      result = result.replace( "${" + c + "}", ph.toString() );
+      c++;
+    }
+
+    // Apply prefix if specified by the boolean
+    return Utils.translateColors( result );
+  }
+
+  /**
+   * Getter for the template only, replaces colors
+   * @return Template string of enum
+   */
+  public String getTemplate() {
+    return Utils.translateColors( template );
+  }
+
+  /**
+   * This just calls {@link #applyPrefixless(Object...)} and adds the prefix
+   * @param placeholders Array of values to put in placeholders
+   * @return String with translated colors and applied placeholders plus prefix
+   */
+  public String apply( Object... placeholders ) {
+    return PREFIX.getTemplate() + applyPrefixless( placeholders );
+  }
+}

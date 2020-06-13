@@ -1,6 +1,9 @@
 package at.sps.core.utils;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -60,14 +63,54 @@ public class Utils {
 
   /**
    * Try to parse a string to an integer
-   * @param value the string to parse
+   * @param value The string to parse
    * @return The parsed int or null if an error occurred
    */
   public static Integer tryParseInt( String value ) {
     try {
       return Integer.parseInt( value );
-    } catch ( Exception ex ) {
+    } catch ( Exception e ) {
       return null;
     }
+  }
+
+  /**
+   * Try to parse a string to an integer
+   * @param value The string to parse
+   * @return The parsed long or null if an error occured
+   */
+  public static Long tryParseLong( String value ) {
+    try {
+      return Long.parseLong( value );
+    } catch ( Exception e ) {
+      return null;
+    }
+  }
+
+  /**
+   * Check whether or not the player can receive the provided itemstack
+   * or his inventory has no more space to hold it
+   * @param p Player to check the inventory of
+   * @param stack Stack wanted to get added
+   * @return The amount of items that would remain
+   */
+  public static int canReceiveItems( Player p, ItemStack stack ) {
+    // Loop all items in the inventory, keep a track of the remaining items
+    int remainders = stack.getAmount();
+    for( ItemStack it : p.getInventory().getContents() ) {
+      // Completely emty slot, this can take anything
+      if( it == null || it.getType() == Material.AIR )
+        return 0;
+
+      // Type mismatch, don't need to check if that stack can be higher
+      if( it.getType() != stack.getType() )
+        continue;
+
+      // Decrease remaining items by the amount this stack could be increased to
+      remainders -= it.getMaxStackSize() - it.getAmount();
+    }
+
+    // Return the remainder, constraint against 0, no negative numbers
+    return Math.max( remainders, 0 );
   }
 }

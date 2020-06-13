@@ -91,7 +91,7 @@ public class HomeMapper extends ModelMapper< Home > {
                 playerId.toString()
             ) );
         } catch ( Exception e ) {
-            ConsoleLogger.getInst().logMessage( "&cError while searching for a home by it's name!" );
+            ConsoleLogger.getInst().logMessage( "&cError while listing homes!" );
             ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
             return new ArrayList<>();
         }

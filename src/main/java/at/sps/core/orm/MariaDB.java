@@ -34,7 +34,7 @@ public class MariaDB {
       // Load driver and build conn-string
       Class.forName( "com.mysql.jdbc.Driver" );
       String url = "jdbc:mysql://localhost:3306/" + this.database +
-              "?characterEncoding=latin1&useUnicode=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
+              "?characterEncoding=utf8&useUnicode=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
 
       // Open connection
       this.conn = DriverManager.getConnection( url, this.username, this.password );

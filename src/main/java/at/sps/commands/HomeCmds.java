@@ -1,10 +1,10 @@
 package at.sps.commands;
 
-import at.sps.core.GlobalConstants;
-import at.sps.core.shortcmds.ShortCommand;
+import at.sps.core.conf.Messages;
 import at.sps.core.orm.ActionResult;
 import at.sps.core.orm.mappers.HomeMapper;
 import at.sps.core.orm.models.Home;
+import at.sps.core.shortcmds.ShortCommand;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -20,7 +20,7 @@ public class HomeCmds {
     private void onHome( Player sender, String[] args ) {
         // No name provided
         if( args.length != 1 ) {
-            sender.sendMessage( GlobalConstants.PREFIX + "§cBenutze: /home <Name>" );
+            sender.sendMessage( Messages.USAGE.apply( "/home <Name>" ) );
             return;
         }
 
@@ -29,13 +29,13 @@ public class HomeCmds {
 
         // Home non existent
         if( target == null ) {
-            sender.sendMessage( GlobalConstants.PREFIX + "§7Das home §d" + args[ 0 ] + " §7existiert nicht!" );
+            sender.sendMessage( Messages.HOME_NON_EXISTENT.apply( args[ 0 ] ) );
             return;
         }
 
-        // Teleport to his home
+        // Teleport to home, notify
         sender.teleport( target.getLocation() );
-        sender.sendMessage( GlobalConstants.PREFIX + "§7Du wurdest erfolgreich zum home §d" + target.getName() + " §7teleportiert!" );
+        sender.sendMessage( Messages.HOME_TELEPORT.apply( target.getName() ) );
     }
 
     /**
@@ -47,7 +47,7 @@ public class HomeCmds {
     private void onSethome( Player sender, String[] args ) {
         // No name provided
         if( args.length != 1 ) {
-            sender.sendMessage( GlobalConstants.PREFIX + "§cBenutze: /sethome <Name>" );
+            sender.sendMessage( Messages.USAGE.apply( "/sethome <Name>" ) );
             return;
         }
 
@@ -55,20 +55,19 @@ public class HomeCmds {
         ActionResult result = HomeMapper.getInst().addHome( added );
 
         switch ( result ) {
-
             // Home added
             case OK:
-                sender.sendMessage( GlobalConstants.PREFIX + "§7Das home §d" + added.getName() + " §7wurde erfolgreich erstellt!" );
+                sender.sendMessage( Messages.HOME_CREATED.apply( added.getName() ) );
                 break;
 
             // Name is already existent
             case ALREADY_EXISTENT:
-                sender.sendMessage( GlobalConstants.PREFIX + "§7Das home §d" + added.getName() + " §7existiert bereits!" );
+                sender.sendMessage( Messages.HOME_EXISTING.apply( added.getName() ) );
                 break;
 
             // Error
             default:
-                sender.sendMessage( GlobalConstants.PREFIX.toString() + GlobalConstants.INTERNAL_ERROR + " (" + result + ")" );
+                sender.sendMessage( Messages.INTERNAL_ERR.apply( "HOMECR->" + result ) );
                 break;
         }
     }
@@ -82,7 +81,7 @@ public class HomeCmds {
     private void onDelhome( Player sender, String[] args ) {
         // No name provided
         if( args.length != 1 ) {
-            sender.sendMessage( GlobalConstants.PREFIX + "§cBenutze: /delhome <Name>" );
+            sender.sendMessage( Messages.USAGE.apply( "/delhome <Name>" ) );
             return;
         }
 
@@ -90,20 +89,19 @@ public class HomeCmds {
         ActionResult result = HomeMapper.getInst().removeHome( sender.getUniqueId(), args[ 0 ] );
 
         switch ( result ) {
-
             // Home deleted
             case OK:
-                sender.sendMessage( GlobalConstants.PREFIX + "§7Das home §d" + args[ 0 ] + " §7wurde erfolgreich gelöscht!" );
+                sender.sendMessage( Messages.HOME_DELETED.apply( args[ 0 ] ) );
                 break;
 
             // Name is not existent
             case NON_EXISTENT:
-                sender.sendMessage( GlobalConstants.PREFIX + "§7Das home §d" + args[ 0 ] + " §7existiert nicht!" );
+                sender.sendMessage( Messages.HOME_NON_EXISTENT.apply( args[ 0 ] ) );
                 break;
 
             // Error
             default:
-                sender.sendMessage( GlobalConstants.PREFIX.toString() + GlobalConstants.INTERNAL_ERROR + " (" + result + ")" );
+                sender.sendMessage( Messages.INTERNAL_ERR.apply( "HOMEDL->" + result ) );
                 break;
         }
     }
@@ -119,20 +117,20 @@ public class HomeCmds {
         List< Home > homes = HomeMapper.getInst().listHomes( sender.getUniqueId() );
 
         // Build message
-        StringBuilder sb = new StringBuilder( "§7Deine Homes: " );
+        StringBuilder list = new StringBuilder();
 
         // No homes found
         if( homes.size() == 0 ) {
-            sender.sendMessage( GlobalConstants.PREFIX + sb.toString() + "§cKeine Homes gesetzt!" );
+            sender.sendMessage( Messages.HOMES_LIST.apply( Messages.HOMES_NONE.apply() ) );
             return;
         }
 
         // Build home list
-        sb.append( "§d" ).append( homes.get( 0 ).getName() );
+        list.append( homes.get( 0 ).getName() );
         for( int i = 1; i < homes.size(); i++ )
-            sb.append( "§7, §d" ).append( homes.get( i ).getName() );
+            list.append( Messages.HOME_DELIMITER.apply() ).append( homes.get( i ).getName() );
 
         // Send list of available homes to the player
-        sender.sendMessage( GlobalConstants.PREFIX + sb.toString() );
+        sender.sendMessage( Messages.HOMES_LIST.apply( list.toString() ) );
     }
 }

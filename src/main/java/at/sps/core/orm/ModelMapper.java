@@ -14,7 +14,8 @@ import java.util.stream.Collectors;
 public abstract class ModelMapper< T extends MappableModel > {
 
   protected final MariaDB database;
-  private final Map< Class< ? >, ParamFuncCB< Object, String > > writeTranslators;
+  private final Map< Class< ? >, ParamFuncCB< Object, String > > writeTranslatorsC;
+  private final Map< String, ParamFuncCB< Object, String > > writeTranslatorsN;
   private LinkedList< ColInfo > tableFields;
 
   /**
@@ -25,7 +26,8 @@ public abstract class ModelMapper< T extends MappableModel > {
    */
   public ModelMapper( MariaDB database ) {
     this.database = database;
-    this.writeTranslators = new HashMap<>();
+    this.writeTranslatorsC = new HashMap<>();
+    this.writeTranslatorsN = new HashMap<>();
 
     // Fetch a list of ColInfo objects for mapping later on, used multiple times
     try {
@@ -80,7 +82,7 @@ public abstract class ModelMapper< T extends MappableModel > {
         assert d != null;
 
         // Append to data array
-        data[ c ] = tryTranslate( d );
+        data[ c ] = tryTranslate( curr.getTarget(), d );
         c++;
       }
 
@@ -118,18 +120,24 @@ public abstract class ModelMapper< T extends MappableModel > {
 
   /**
    * Try to translate an object for writing
+   * @param field Field that contains this, for name based translation
    * @param input Object to translate
    * @return Translated object if translator existent, input otherwise
    */
-  private Object tryTranslate( Object input ) {
+  private Object tryTranslate( Field field, Object input ) {
     // Try to find the corresponding translator
-    for( Class< ? > key : writeTranslators.keySet() ) {
+    for( Class< ? > key : writeTranslatorsC.keySet() ) {
       if( !key.isAssignableFrom( input.getClass() ) )
         continue;
 
       // Translate to string
-      return writeTranslators.get( key ).call( input );
+      return writeTranslatorsC.get( key ).call( input );
     }
+
+    // Try to find a field name based translator
+    String name = field.getName();
+    if( writeTranslatorsN.containsKey( name ) )
+      return writeTranslatorsN.get( name ).call( input );
 
     // No translator found
     return input;
@@ -213,7 +221,7 @@ public abstract class ModelMapper< T extends MappableModel > {
         data.add( currE.getID() );
         for ( ColInfo key : keys ) {
           query.append( " AND `" ).append( key.getName() ).append( "` = ?" );
-          data.add( tryTranslate( key.getTarget().get( currE ) ) );
+          data.add( tryTranslate( key.getTarget(), key.getTarget().get( currE ) ) );
         }
 
         // Implemented deletion element
@@ -436,6 +444,15 @@ public abstract class ModelMapper< T extends MappableModel > {
    * @param func Function for I/O
    */
   protected void registerTranslator( Class< ? > type, ParamFuncCB< Object, String > func ) {
-    this.writeTranslators.put( type, func );
+    this.writeTranslatorsC.put( type, func );
+  }
+
+  /**
+   * Register a data translator for writing this field to DB
+   * @param fieldname Name of the target field to translate
+   * @param func Function for I/O
+   */
+  protected void registerTranslator( String fieldname, ParamFuncCB< Object, String > func ) {
+    this.writeTranslatorsN.put( fieldname, func );
   }
 }

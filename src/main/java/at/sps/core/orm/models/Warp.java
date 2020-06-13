@@ -43,16 +43,4 @@ public class Warp extends MappableModel {
     this.creationDate = creationDate;
     this.creator = creator;
   }
-
-  // NOTE: Only used for debugging purposes!
-  @Override
-  public String toString() {
-    SimpleDateFormat df = new SimpleDateFormat( "" );
-    String world = location.getWorld() == null ? "null" : location.getWorld().getName();
-    return "Warp{" +
-            creator + ", " + name + ", " + df.format( new Date( creationDate ) ) + ", " +
-            location.getX() + ", " + location.getY() + ", " + location.getZ() + ", " +
-            location.getYaw() + ", " + location.getPitch() + ", " + world +
-            "}";
-  }
 }

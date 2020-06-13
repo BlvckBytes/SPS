@@ -35,15 +35,4 @@ public class Home extends MappableModel {
         this.name = name;
         this.location = location;
     }
-
-    // NOTE: Only used for debugging purposes!
-    @Override
-    public String toString() {
-        String world = location.getWorld() == null ? "null" : location.getWorld().getName();
-        return "Home{" +
-                playerUUID + ", " + name + ", " +
-                location.getX() + ", " + location.getY() + ", " + location.getZ() + ", " +
-                location.getYaw() + ", " + location.getPitch() + ", " + world +
-        "}";
-    }
 }
