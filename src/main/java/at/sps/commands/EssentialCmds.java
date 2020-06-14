@@ -3,6 +3,8 @@ package at.sps.commands;
 import at.sps.core.Main;
 import at.sps.core.conf.Messages;
 import at.sps.core.shortcmds.ShortCommand;
+import at.sps.core.utils.ComplexMessage;
+import at.sps.core.utils.ComplexPart;
 import at.sps.core.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -208,6 +210,27 @@ public class EssentialCmds {
       target.sendMessage( Messages.FLY_CHANGED_TARGET.apply( executor, newStateName ) );
       sender.sendMessage( Messages.FLY_CHANGED_EXECUTOR.apply( target.getDisplayName(), newStateName ) );
     }
+  }
+
+  /**
+   * Comand: vote
+   * Usage: /vote
+   * Used to display vote links
+   */
+  @ShortCommand( command = "vote", terminalDeny = true )
+  private void onVote( Player sender, String[] args ) {
+    sender.sendMessage( Messages.PANEL_SPACER.applyPrefixless( "Vote" ) );
+    sender.sendMessage( "§7> Du kannst §djeden Tag §7für uns Voten, um als Dankeschön einen §dReward §7zu erhalten." );
+    sender.sendMessage( "§7> Benutze dafür einfach einen der folgenden §dlinks§7:" );
+
+    String[] links = { "google.at", "tonymacx86.com" };
+    for( String link : links ) {
+      ComplexMessage linkMsg = new ComplexMessage( new ComplexPart( "§7> ", "", "", false ) );
+      linkMsg.append( new ComplexPart( "§d" + link, "§7Klick hier, um den Link zu §döffnen§7!", "https://" + link, false ) );
+      linkMsg.send( sender );
+    }
+
+    sender.sendMessage( Messages.PANEL_SPACER.applyPrefixless( "Vote" ) );
   }
 
   /**

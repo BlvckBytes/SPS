@@ -5,11 +5,22 @@ import at.sps.core.orm.ActionResult;
 import at.sps.core.orm.mappers.WarpMapper;
 import at.sps.core.orm.models.Warp;
 import at.sps.core.shortcmds.ShortCommand;
+import at.sps.core.utils.ComplexMessage;
+import at.sps.core.utils.ComplexPart;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 public class WarpCmds {
+
+  private final SimpleDateFormat warpDateFormat;
+
+  public WarpCmds() {
+    warpDateFormat = new SimpleDateFormat( "dd.MM.yyyy" );
+  }
 
   /**
    * Command: warp
@@ -162,21 +173,32 @@ public class WarpCmds {
     String searchterm = args.length == 0 ? "" : args[ 0 ];
     List< Warp > warps = WarpMapper.getInst().listWarps( searchterm );
 
-    // Build message
-    StringBuilder list = new StringBuilder();
-
     // No warps found
     if( warps.size() == 0 ) {
-      sender.sendMessage( Messages.WARP_LIST.apply( Messages.WARP_NONE.apply() ) );
+      sender.sendMessage( Messages.WARP_LIST.apply() + Messages.WARP_NONE.getTemplate() );
       return;
     }
 
+    // Build message
+    ComplexMessage msg = new ComplexMessage( new ComplexPart( Messages.WARP_LIST.apply(), "", "", true ) );
+
     // Build home list
-    list.append( warps.get( 0 ).getName() );
-    for( int i = 1; i < warps.size(); i++ )
-      list.append( Messages.WARP_DELETED.apply() ).append( warps.get( i ).getName() );
+    for( int i = 0; i < warps.size(); i++ ) {
+      // Append delimiter on everything but the first element
+      if( i != 0 )
+        msg.append( new ComplexPart( Messages.WARP_DELIMITER.getTemplate(), "", "", true ) );
+
+      Warp warp = warps.get( i );
+      Location loc = warp.getLocation();
+      String locCords = "(" + loc.getWorld().getName() + ", " + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ() + ")";
+      String date = warpDateFormat.format( new Date( warp.getCreationDate() ) );
+      String hover = Messages.WARP_LIST_HOVER.applyPrefixless( date, locCords );
+
+      // Append current warp entry
+      msg.append( new ComplexPart( Messages.WARP_COLOR.getTemplate() + warp.getName(), hover, "/warp " + warp.getName(), true ) );
+    }
 
     // Send list of available homes to the player
-    sender.sendMessage( Messages.WARP_LIST.apply( list.toString() ) );
+    msg.send( sender );
   }
 }

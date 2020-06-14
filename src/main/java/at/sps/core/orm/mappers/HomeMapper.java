@@ -1,21 +1,22 @@
 package at.sps.core.orm.mappers;
 
-import at.sps.core.ConsoleLogger;
 import at.sps.core.Main;
+import at.sps.core.orm.ActionResult;
 import at.sps.core.orm.MariaDB;
 import at.sps.core.orm.ModelMapper;
 import at.sps.core.orm.ObjectRebuilder;
-import at.sps.core.orm.ActionResult;
-import at.sps.core.utils.ParamFuncCB;
-import at.sps.core.utils.Utils;
 import at.sps.core.orm.models.Home;
+import at.sps.core.utils.LogLevel;
+import at.sps.core.utils.SLogging;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 
 import java.sql.ResultSet;
-import java.sql.SQLIntegrityConstraintViolationException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
 public class HomeMapper extends ModelMapper< Home > {
 
@@ -71,8 +72,8 @@ public class HomeMapper extends ModelMapper< Home > {
             // There can just be one result since UUID & name are the key
             return result.size() > 0 ? result.get( 0 ) : null;
         } catch ( Exception e ) {
-            ConsoleLogger.getInst().logMessage( "&cError while searching for a home by it's name!" );
-            ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
+            SLogging.getInst().log( "Error while searching for a home by it's name!", LogLevel.ERROR );
+            SLogging.getInst().log( e );
             return null;
         }
     }
@@ -91,8 +92,8 @@ public class HomeMapper extends ModelMapper< Home > {
                 playerId.toString()
             ) );
         } catch ( Exception e ) {
-            ConsoleLogger.getInst().logMessage( "&cError while listing homes!" );
-            ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
+            SLogging.getInst().log( "Error while listing homes", LogLevel.ERROR );
+            SLogging.getInst().log( e );
             return new ArrayList<>();
         }
     }
@@ -120,16 +121,14 @@ public class HomeMapper extends ModelMapper< Home > {
 
                 // Fetch uuid and generate Home object into buffer list
                 UUID uu = UUID.fromString( rs.getString( "uuid" ) );
-                Home home = new Home( uu, rs.getString( "name" ), loc );
-
-                // Set ID for later manipulation with DB
-                home.setID( rs.getInt( "ID" ) );
+                Home home = new Home( uu, rs.getString( "name" ), loc, rs.getLong( "creationDate" ) );
+                bindID( home, rs );
 
                 buf.add( home );
             }
         } catch ( Exception e ) {
-            ConsoleLogger.getInst().logMessage( "&cError while mapping read homes!" );
-            ConsoleLogger.getInst().logMessage( Utils.stringifyException( e ) );
+            SLogging.getInst().log( "Error while mapping read homes!", LogLevel.ERROR );
+            SLogging.getInst().log( e );
         }
 
         return buf;

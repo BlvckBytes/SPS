@@ -4,13 +4,15 @@ import at.sps.commands.EssentialCmds;
 import at.sps.commands.HomeCmds;
 import at.sps.commands.KitCmds;
 import at.sps.commands.WarpCmds;
-import at.sps.core.conf.Messages;
 import at.sps.core.conf.SPSConfig;
+import at.sps.core.orm.MariaDB;
+import at.sps.core.orm.mappers.HomeMapper;
+import at.sps.core.orm.mappers.KitCooldownMapper;
 import at.sps.core.orm.mappers.KitMapper;
 import at.sps.core.orm.mappers.WarpMapper;
 import at.sps.core.shortcmds.SCManager;
-import at.sps.core.orm.MariaDB;
-import at.sps.core.orm.mappers.HomeMapper;
+import at.sps.core.utils.LogLevel;
+import at.sps.core.utils.SLogging;
 import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -31,7 +33,7 @@ public class Main extends JavaPlugin {
     registerCommands();
     setupResources();
 
-    ConsoleLogger.getInst().logMessage( "&aSystem initialized successfully!" );
+    SLogging.getInst().log( "System initialized successfully!", LogLevel.INFO );
   }
 
   // On plugin unload
@@ -41,7 +43,7 @@ public class Main extends JavaPlugin {
     if( db != null )
       db.disconnect();
 
-    ConsoleLogger.getInst().logMessage( "&aSystem shutdown!" );
+    SLogging.getInst().log( "System shutdown successfully!", LogLevel.INFO );
   }
 
   /**
@@ -64,7 +66,7 @@ public class Main extends JavaPlugin {
     db.connect();
 
     // Create all needed tables
-    db.buildTables( HomeMapper.getInst(), WarpMapper.getInst(), KitMapper.getInst() );
+    db.buildTables( HomeMapper.getInst(), WarpMapper.getInst(), KitMapper.getInst(), KitCooldownMapper.getInst() );
 
     // Create and load config file, this is not used anywhere else ATM
     new SPSConfig( new File( getDataFolder(), "config.yml" ) );

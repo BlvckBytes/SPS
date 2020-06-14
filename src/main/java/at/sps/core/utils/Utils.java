@@ -5,8 +5,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.time.Duration;
 
 public class Utils {
 
@@ -18,32 +17,6 @@ public class Utils {
    */
   public static String translateColors( String input ) {
     return ChatColor.translateAlternateColorCodes( '&', input );
-  }
-
-  /**
-   * Generate the stacktrace string from an exception
-   * @param e Exception to stringify
-   * @return Stacktrace string
-   */
-  public static String stringifyException( Exception e ) {
-    try {
-      // Create print writer on string writer
-      StringWriter sw = new StringWriter();
-      PrintWriter pw = new PrintWriter( sw );
-
-      // Write exception and get it as string
-      e.printStackTrace( pw );
-      String res = sw.toString();
-
-      // Close resources
-      sw.close();
-      pw.close();
-
-      return res;
-    } catch ( Exception ex ) {
-      ex.printStackTrace();
-      return "Error while stringifying an exception!";
-    }
   }
 
   /**
@@ -112,5 +85,35 @@ public class Utils {
 
     // Return the remainder, constraint against 0, no negative numbers
     return Math.max( remainders, 0 );
+  }
+
+  /**
+   * Format a remaining time in milliseconds to a human readable time string
+   * @param remainder Remaining time in ms
+   * @return Time string formatted nicely
+   */
+  public static String formatRemainder( long remainder ) {
+    StringBuilder sb = new StringBuilder();
+    Duration dur = Duration.ofMillis( remainder );
+
+    // Get parts of the time
+    long seconds = dur.getSeconds() % 60;
+    long minutes = dur.toMinutes() % 60;
+    long hours = dur.toHours() % 24;
+    long days = dur.toDays();
+
+    // Only append parts if their existent (> 0)
+
+    if( days > 0 )
+      sb.append( " " ).append( days ).append( "d" );
+
+    if( hours > 0 )
+      sb.append( " " ).append( hours ).append( "h" );
+
+    if( minutes > 0 )
+      sb.append( " " ).append( minutes ).append( "m" );
+
+    sb.append( " " ).append( seconds ).append( "s" );
+    return sb.toString().substring( 1 );
   }
 }

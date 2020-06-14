@@ -1,7 +1,7 @@
 package at.sps.core.conf;
 
-import at.sps.core.ConsoleLogger;
-import at.sps.core.utils.Utils;
+import at.sps.core.utils.LogLevel;
+import at.sps.core.utils.SLogging;
 import com.google.common.base.Charsets;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -21,8 +21,8 @@ public class SPSConfig extends YamlConfiguration {
       this.file = file;
       load( file );
     } catch ( Exception e ) {
-      ConsoleLogger.getInst().logMessage( "&cError while loading config file!" );
-      ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
+      SLogging.getInst().log( "Error while loading config file!", LogLevel.ERROR );
+      SLogging.getInst().log( e );
     }
   }
 

@@ -5,11 +5,22 @@ import at.sps.core.orm.ActionResult;
 import at.sps.core.orm.mappers.HomeMapper;
 import at.sps.core.orm.models.Home;
 import at.sps.core.shortcmds.ShortCommand;
+import at.sps.core.utils.ComplexMessage;
+import at.sps.core.utils.ComplexPart;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 public class HomeCmds {
+
+    private final SimpleDateFormat homeDateFormat;
+
+    public HomeCmds() {
+        homeDateFormat = new SimpleDateFormat( "dd.MM.yyyy" );
+    }
 
     /**
      * Command: home
@@ -51,7 +62,7 @@ public class HomeCmds {
             return;
         }
 
-        Home added = new Home( sender.getUniqueId(), args[ 0 ], sender.getLocation() );
+        Home added = new Home( sender.getUniqueId(), args[ 0 ], sender.getLocation(), System.currentTimeMillis() );
         ActionResult result = HomeMapper.getInst().addHome( added );
 
         switch ( result ) {
@@ -116,21 +127,34 @@ public class HomeCmds {
         // Fetch all existing homes from the database
         List< Home > homes = HomeMapper.getInst().listHomes( sender.getUniqueId() );
 
-        // Build message
-        StringBuilder list = new StringBuilder();
-
         // No homes found
         if( homes.size() == 0 ) {
-            sender.sendMessage( Messages.HOMES_LIST.apply( Messages.HOMES_NONE.apply() ) );
+            sender.sendMessage( Messages.HOMES_LIST.apply() + Messages.HOMES_NONE.getTemplate() );
             return;
         }
 
+        // Build complex message
+        ComplexMessage msg = new ComplexMessage( new ComplexPart( Messages.HOMES_LIST.apply(), "", "", true ) );
+
         // Build home list
-        list.append( homes.get( 0 ).getName() );
-        for( int i = 1; i < homes.size(); i++ )
-            list.append( Messages.HOME_DELIMITER.apply() ).append( homes.get( i ).getName() );
+        for( int i = 0; i < homes.size(); i++ ) {
+            // Append delimiter on everything but the first element
+            if( i != 0 )
+                msg.append( new ComplexPart( Messages.HOME_DELIMITER.getTemplate(), "", "", true ) );
+
+            // Build hover string from home data
+            Home currHome = homes.get( i );
+            String date = homeDateFormat.format( new Date( currHome.getCreationDate() ) );
+            Location loc = currHome.getLocation();
+            String locCords = "(" + loc.getWorld().getName() + ", " + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ() + ")";
+            String hover = Messages.HOMES_LIST_HOVER.applyPrefixless( date, locCords );
+
+            // Append part
+            String text = Messages.HOME_COLOR.getTemplate() + currHome.getName();
+            msg.append( new ComplexPart( text, hover, "/home " + currHome.getName(), true ) );
+        }
 
         // Send list of available homes to the player
-        sender.sendMessage( Messages.HOMES_LIST.apply( list.toString() ) );
+        msg.send( sender );
     }
 }

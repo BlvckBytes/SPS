@@ -1,7 +1,6 @@
 package at.sps.core.orm;
 
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * Every mappable model must have an ID, this forces them, since a
@@ -9,7 +8,7 @@ import lombok.Setter;
  */
 public class MappableModel {
 
-  @Getter @Setter
+  @Getter
   private int ID;
 
 }

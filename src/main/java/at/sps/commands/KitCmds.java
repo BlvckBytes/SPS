@@ -2,21 +2,20 @@ package at.sps.commands;
 
 import at.sps.core.conf.Messages;
 import at.sps.core.orm.ActionResult;
+import at.sps.core.orm.mappers.KitCooldownMapper;
 import at.sps.core.orm.mappers.KitMapper;
 import at.sps.core.orm.models.Kit;
+import at.sps.core.orm.models.KitCooldown;
 import at.sps.core.shortcmds.ShortCommand;
-import at.sps.core.utils.Utils;
-import net.md_5.bungee.api.chat.*;
-import net.minecraft.server.v1_8_R3.*;
+import at.sps.core.utils.*;
 import org.bukkit.Material;
-import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class KitCmds {
 
@@ -39,6 +38,29 @@ public class KitCmds {
     if( target == null ) {
       sender.sendMessage( Messages.KIT_NON_EXISTENT.apply( args[ 0 ] ) );
       return;
+    }
+
+    // Get the kit's cooldown information for the player
+    UUID holder = sender.getUniqueId();
+    KitCooldown cooldown = KitCooldownMapper.getInst().getForPlayer( holder, target );
+
+    // No cooldown existent, just write curr time to DB and hand out the kit
+    if( cooldown == null || cooldown.getRemainder() == null ) {
+      KitCooldownMapper.getInst().saveCooldown( new KitCooldown( holder, target.getID(), System.currentTimeMillis() ) );
+    }
+
+    // Cooldown exists, check if the player is allowed to get the kit yet
+    else {
+      // There is still time remaining, break here
+      if( cooldown.getRemainder() > 0 ) {
+        String timeString = Utils.formatRemainder( cooldown.getRemainder() );
+        sender.sendMessage( Messages.KIT_COOLDOWN.apply( timeString, target.getTitle() ) );
+        return;
+      }
+
+      // Since the kit will now be given, re-set the new timestamp
+      cooldown.setLastUse( System.currentTimeMillis() );
+      KitCooldownMapper.getInst().saveCooldown( cooldown );
     }
 
     // Loop contents
@@ -234,18 +256,18 @@ public class KitCmds {
 
     // No kits created
     if( kits.size() == 0 ) {
-      sender.sendMessage( Messages.KIT_LIST.apply( Messages.KIT_NONE.getTemplate() ) );
+      sender.sendMessage( Messages.KIT_LIST.apply() + Messages.KIT_NONE.getTemplate() );
       return;
     }
 
-    // Create component buffer, first one is list prefix
-    IChatBaseComponent firstNode = IChatBaseComponent.ChatSerializer.a( "{text: \"" + Messages.KIT_LIST.getTemplate() + "\"}" );
+    // Create complex message builder, first part is list prefix
+    ComplexMessage msg = new ComplexMessage( new ComplexPart( Messages.KIT_LIST.apply(), "", "", true ) );
 
     // Build list of kits
     for( int i = 0; i < kits.size(); i++ ) {
       // Append delimiter on everything but the first element
       if( i != 0 )
-        firstNode.addSibling( IChatBaseComponent.ChatSerializer.a( "{text: \"" + Messages.KIT_DELIMITER.getTemplate() + "\"}" ) );
+        msg.append( new ComplexPart( Messages.KIT_DELIMITER.getTemplate(), "", "", true ) );
 
       // Get current kit for properties and build hover message
       Kit currKit = kits.get( i );
@@ -253,18 +275,11 @@ public class KitCmds {
 
       // Build current entry
       String text = Messages.KIT_COLOR.getTemplate() + currKit.getTitle();
-      IChatBaseComponent currNode = new ChatMessage( text );
-      currNode.setChatModifier( new ChatModifier() );
-      currNode.getChatModifier().setChatHoverable( new ChatHoverable( ChatHoverable.EnumHoverAction.SHOW_TEXT, new ChatMessage( hover ) ) );
-      currNode.getChatModifier().setChatClickable( new ChatClickable( ChatClickable.EnumClickAction.RUN_COMMAND, "/kit " + currKit.getTitle() ) );
-
-      // Add current node as a sibling in component chain
-      firstNode.addSibling( currNode );
+      msg.append( new ComplexPart( text, hover, "/kit " + currKit.getTitle(), true ) );
     }
 
-    // Send the component array to the player's chat
-    PacketPlayOutChat ppoc = new PacketPlayOutChat( firstNode );
-    ( ( CraftPlayer ) sender ).getHandle().playerConnection.sendPacket( ppoc );
+    // Send message to the executor
+    msg.send( sender );
   }
 
   /**

@@ -1,7 +1,7 @@
 package at.sps.core.orm;
 
-import at.sps.core.ConsoleLogger;
-import at.sps.core.utils.Utils;
+import at.sps.core.utils.LogLevel;
+import at.sps.core.utils.SLogging;
 import lombok.Getter;
 
 import java.sql.Connection;
@@ -38,10 +38,10 @@ public class MariaDB {
 
       // Open connection
       this.conn = DriverManager.getConnection( url, this.username, this.password );
-      ConsoleLogger.getInst().logMessage( "&aSuccessfully connected to database!" );
+      SLogging.getInst().log( "Successfully connected to SQL-DB!", LogLevel.INFO );
     } catch ( Exception e ) {
-      ConsoleLogger.getInst().logMessage( "&cError while connecting to database!" );
-      ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
+      SLogging.getInst().log( "Error while connecting to SQL-DB!", LogLevel.ERROR );
+      SLogging.getInst().log( e );
     }
   }
 
@@ -56,8 +56,8 @@ public class MariaDB {
         mapper.buildTable();
       } catch ( Exception e ) {
         String name = mapper.getClass().getSimpleName();
-        ConsoleLogger.getInst().logMessage( "&cCould not create table for " + name + "!" );
-        ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
+        SLogging.getInst().log( "Error while creating table " + name + "!", LogLevel.ERROR );
+        SLogging.getInst().log( e );
       }
     }
   }
@@ -72,10 +72,10 @@ public class MariaDB {
         return;
 
       conn.close();
-      ConsoleLogger.getInst().logMessage( "&aSuccessfully disconnected from database!" );
+      SLogging.getInst().log( "Successfully disconnected from SQL-DB!", LogLevel.INFO );
     } catch ( Exception e ) {
-      ConsoleLogger.getInst().logMessage( "&cError while disconnecting from database!" );
-      ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
+      SLogging.getInst().log( "Error while disconnecting from SQL-DB!", LogLevel.ERROR );
+      SLogging.getInst().log( e );
     }
   }
 

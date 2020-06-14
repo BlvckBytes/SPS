@@ -1,13 +1,13 @@
 package at.sps.core.orm.mappers;
 
-import at.sps.core.ConsoleLogger;
 import at.sps.core.Main;
 import at.sps.core.orm.ActionResult;
 import at.sps.core.orm.MariaDB;
 import at.sps.core.orm.ModelMapper;
 import at.sps.core.orm.ObjectRebuilder;
 import at.sps.core.orm.models.Warp;
-import at.sps.core.utils.Utils;
+import at.sps.core.utils.LogLevel;
+import at.sps.core.utils.SLogging;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -79,8 +79,8 @@ public class WarpMapper extends ModelMapper< Warp > {
       // There can just be one result since name is the primary key
       return result.size() > 0 ? result.get( 0 ) : null;
     } catch ( Exception e ) {
-      ConsoleLogger.getInst().logMessage( "&cError while searching for a warp by it's name!" );
-      ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
+      SLogging.getInst().log( "Error while searching for a warp by it's name!", LogLevel.ERROR );
+      SLogging.getInst().log( e );
       return null;
     }
   }
@@ -99,8 +99,8 @@ public class WarpMapper extends ModelMapper< Warp > {
         searchterm
       ) );
     } catch ( Exception e ) {
-      ConsoleLogger.getInst().logMessage( "&cError while searching for warps by name!" );
-      ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
+      SLogging.getInst().log( "Error while searching for warps by name!", LogLevel.ERROR );
+      SLogging.getInst().log( e );
       return new ArrayList<>();
     }
   }
@@ -130,14 +130,13 @@ public class WarpMapper extends ModelMapper< Warp > {
         UUID uu = UUID.fromString( rs.getString( "creator" ) );
         long creationDate = rs.getLong( "creationdate" );
         Warp warp = new Warp( rs.getString( "name" ), loc, creationDate, uu );
+        bindID( warp, rs );
 
-        // Set ID and add warp to list
-        warp.setID( rs.getInt( "ID" ) );
         buf.add( warp );
       }
     } catch ( Exception e ) {
-      ConsoleLogger.getInst().logMessage( "&cError while mapping read warps!" );
-      ConsoleLogger.getInst().logMessage( Utils.stringifyException( e ) );
+      SLogging.getInst().log( "Error while mapping read warps!", LogLevel.ERROR );
+      SLogging.getInst().log( e );
     }
 
     return buf;

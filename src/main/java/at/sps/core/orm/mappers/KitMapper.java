@@ -1,12 +1,12 @@
 package at.sps.core.orm.mappers;
 
-import at.sps.core.ConsoleLogger;
 import at.sps.core.Main;
 import at.sps.core.orm.ActionResult;
 import at.sps.core.orm.MariaDB;
 import at.sps.core.orm.ModelMapper;
 import at.sps.core.orm.models.Kit;
-import at.sps.core.utils.Utils;
+import at.sps.core.utils.LogLevel;
+import at.sps.core.utils.SLogging;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.io.BukkitObjectInputStream;
 import org.bukkit.util.io.BukkitObjectOutputStream;
@@ -77,8 +77,31 @@ public class KitMapper extends ModelMapper< Kit > {
       // There can just be one result since UUID & name are the key
       return result.size() > 0 ? result.get( 0 ) : null;
     } catch ( Exception e ) {
-      ConsoleLogger.getInst().logMessage( "&cError while searching for a kit by it's name!" );
-      ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
+      SLogging.getInst().log( "Error while searching for a kit by it's name!", LogLevel.ERROR );
+      SLogging.getInst().log( e );
+      return null;
+    }
+  }
+
+  /**
+   * Get a kit by it's ID, used for cooldown mapping
+   * @param id ID of the target kit
+   * @return Kit if exists, null otherwise
+   */
+  public Kit getById( int id ) {
+    try {
+      // Fetch result to get only the target player's home with corresponding name
+      List< Kit > result = read( database.fetchResult(
+          "SELECT * FROM `Kit`" +
+          "WHERE `ID` = ?",
+          id
+      ) );
+
+      // There can just be one result since UUID & name are the key
+      return result.size() > 0 ? result.get( 0 ) : null;
+    } catch ( Exception e ) {
+      SLogging.getInst().log( "Error while searching for a kit by it's id!", LogLevel.ERROR );
+      SLogging.getInst().log( e );
       return null;
     }
   }
@@ -91,7 +114,7 @@ public class KitMapper extends ModelMapper< Kit > {
    */
   public List< Kit > listKits( String searchterm, boolean loadContent ) {
     try {
-      // Fetch result to get only the searched for warps
+      // Fetch result to get only the searched for kits
       String cols = loadContent ? "*" : "ID, title, description, cooldown, stackCount, '' as contents";
       return read( database.fetchResult(
         "SELECT " + cols + " FROM `Kit`" +
@@ -99,8 +122,8 @@ public class KitMapper extends ModelMapper< Kit > {
         searchterm
       ) );
     } catch ( Exception e ) {
-      ConsoleLogger.getInst().logMessage( "&cError while listing kits!" );
-      ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
+      SLogging.getInst().log( "Error while listing kits!", LogLevel.ERROR );
+      SLogging.getInst().log( e );
       return new ArrayList<>();
     }
   }
@@ -128,14 +151,13 @@ public class KitMapper extends ModelMapper< Kit > {
 
         Kit kit = new Kit( rs.getString( "title" ), rs.getString( "description" ), rs.getLong( "cooldown" ), items );
         kit.setStackCount( rs.getInt( "stackCount" ) );
+        bindID( kit, rs );
 
-        // Set ID for later manipulation with DB
-        kit.setID( rs.getInt( "ID" ) );
         buf.add( kit );
       }
     } catch ( Exception e ) {
-      ConsoleLogger.getInst().logMessage( "&cError while mapping read kits!" );
-      ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
+      SLogging.getInst().log( "Error while mapping read kits!", LogLevel.ERROR );
+      SLogging.getInst().log( e );
     }
 
     return buf;
@@ -161,8 +183,8 @@ public class KitMapper extends ModelMapper< Kit > {
       dataOutput.close();
       return Base64Coder.encodeLines( outputStream.toByteArray() );
     } catch ( Exception e ) {
-      ConsoleLogger.getInst().logMessage( "&cError while stringifying kit's items list!" );
-      ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
+      SLogging.getInst().log( "Error while stringifying a kit's items list!", LogLevel.ERROR );
+      SLogging.getInst().log( e );
       return "";
     }
   }
@@ -187,8 +209,8 @@ public class KitMapper extends ModelMapper< Kit > {
       // Close resources
       dataInput.close();
     } catch ( Exception e ) {
-      ConsoleLogger.getInst().logMessage( "&cError while unpacking kit's items list!" );
-      ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
+      SLogging.getInst().log( "Error while unpacking a kit's items list!", LogLevel.ERROR );
+      SLogging.getInst().log( e );
     }
 
     return items;

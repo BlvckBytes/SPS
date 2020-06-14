@@ -1,8 +1,8 @@
 package at.sps.core.orm;
 
-import at.sps.core.ConsoleLogger;
+import at.sps.core.utils.LogLevel;
 import at.sps.core.utils.ParamFuncCB;
-import at.sps.core.utils.Utils;
+import at.sps.core.utils.SLogging;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -33,8 +33,8 @@ public abstract class ModelMapper< T extends MappableModel > {
     try {
       tableFields = findFields( getModelClass() );
     } catch ( Exception e ) {
-      ConsoleLogger.getInst().logMessage( "&cError while trying to flatten model struct!" );
-      ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
+      SLogging.getInst().log( "Error while trying to flatten a model structure!", LogLevel.ERROR );
+      SLogging.getInst().log( e );
     }
   }
 
@@ -112,8 +112,8 @@ public abstract class ModelMapper< T extends MappableModel > {
       // the only constraint auto-created is the key constraint
       return ActionResult.ALREADY_EXISTENT;
     } catch ( Exception e ) {
-      ConsoleLogger.getInst().logMessage( "&cError while writing a model to db!" );
-      ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
+      SLogging.getInst().log( "Error while writing a model to the SQL-DB!", LogLevel.ERROR );
+      SLogging.getInst().log( e );
       return ActionResult.INTERNAL_ERROR;
     }
   }
@@ -141,6 +141,27 @@ public abstract class ModelMapper< T extends MappableModel > {
 
     // No translator found
     return input;
+  }
+
+  /**
+   * Bind the ID of a resultset to the created object using reflect, since
+   * the ID-field only offers a getter for integrity
+   * @param object Object to bind ID to
+   * @param rs ResultSet to get ID from
+   */
+  protected void bindID( T object, ResultSet rs ) {
+    try {
+      // Get ID value from result and field from superclass
+      int id = rs.getInt( "ID" );
+      Field targetField = object.getClass().getSuperclass().getDeclaredField( "ID" );
+
+      // Bind value onto field
+      targetField.setAccessible( true );
+      targetField.set( object, id );
+    } catch ( Exception e ) {
+      SLogging.getInst().log( "Error while binding the ID on an object!", LogLevel.ERROR );
+      SLogging.getInst().log( e );
+    }
   }
 
   /**
@@ -173,8 +194,8 @@ public abstract class ModelMapper< T extends MappableModel > {
           return ret;
       }
     } catch ( Exception e ) {
-      ConsoleLogger.getInst().logMessage( "&cError while trying to get a field's value!" );
-      ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
+      SLogging.getInst().log( "Error while trying to get a field's value!", LogLevel.ERROR );
+      SLogging.getInst().log( e );
     }
 
     // Nothing found
@@ -238,8 +259,8 @@ public abstract class ModelMapper< T extends MappableModel > {
       // Data has been deleted
       return ActionResult.OK;
     } catch ( Exception e ) {
-      ConsoleLogger.getInst().logMessage( "&cError while deleting model entries from db!" );
-      ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
+      SLogging.getInst().log( "Error while deleting model entries from SQL-DB!", LogLevel.ERROR );
+      SLogging.getInst().log( e );
       return ActionResult.INTERNAL_ERROR;
     }
   }

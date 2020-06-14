@@ -1,11 +1,10 @@
 package at.sps.core.shortcmds;
 
-import at.sps.core.ConsoleLogger;
 import at.sps.core.conf.Messages;
+import at.sps.core.utils.LogLevel;
 import at.sps.core.utils.Pair;
 import at.sps.core.utils.ParamCall;
-import at.sps.core.utils.Utils;
-import jdk.nashorn.internal.runtime.GlobalConstants;
+import at.sps.core.utils.SLogging;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
@@ -72,8 +71,8 @@ public class SCManager implements Listener {
       else
         receiver.invoke( container, sender, args );
     } catch ( Exception e ) {
-      ConsoleLogger.getInst().logMessage( "&cError while trying to invoke an annotated SC method!" );
-      ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
+      SLogging.getInst().log( "Error while trying to invoke an annotated SC method!", LogLevel.ERROR );
+      SLogging.getInst().log( e );
     }
   }
 
@@ -112,7 +111,7 @@ public class SCManager implements Listener {
           isProperReceiver = false;
 
         if( !isProperReceiver ) {
-          ConsoleLogger.getInst().logMessage( "Corrupted method signature for ShortCommand at " + meth.getName() + "!" );
+          SLogging.getInst().log( "Corrupted method signature for SC at " + meth.getName() + "!", LogLevel.ERROR );
           return;
         }
 
@@ -130,8 +129,8 @@ public class SCManager implements Listener {
           registerCommand( alias, callHandle, container );
       }
     } catch ( Exception e ) {
-      ConsoleLogger.getInst().logMessage( "&cError while registering a SC container object!" );
-      ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
+      SLogging.getInst().log( "Error while registering an SC container!", LogLevel.ERROR );
+      SLogging.getInst().log( e );
     }
   }
 
@@ -152,7 +151,7 @@ public class SCManager implements Listener {
     registerTab( cmd, dataPair -> {
       // Terminal invocation is denied
       if( targAnno.terminalDeny() ) {
-        ConsoleLogger.getInst().logMessage( Messages.PLAYER_ONLY.apply( cmd ) );
+        Bukkit.getConsoleSender().sendMessage( Messages.PLAYER_ONLY.apply( cmd ) );
         return;
       }
 
@@ -167,8 +166,8 @@ public class SCManager implements Listener {
         else
           meth.invoke( container, Bukkit.getConsoleSender(), args );
       } catch ( Exception e ) {
-        ConsoleLogger.getInst().logMessage( "&cError while trying to invoke an annotated SC method!" );
-        ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
+        SLogging.getInst().log( "Error while trying to invoke an annotated SC method!", LogLevel.ERROR );
+        SLogging.getInst().log( e );
       }
     } );
   }
@@ -191,8 +190,8 @@ public class SCManager implements Listener {
       CommandMap commandMap = ( CommandMap ) bukkitCommandMap.get( Bukkit.getServer() );
       commandMap.register( command, cmd );
     } catch ( Exception e ) {
-      ConsoleLogger.getInst().logMessage( "&cError while registering SC tab functionallity!" );
-      ConsoleLogger.getInst().logMessage( "&c" + Utils.stringifyException( e ) );
+      SLogging.getInst().log( "Error while trying to registering SC tab functionallity!", LogLevel.ERROR );
+      SLogging.getInst().log( e );
     }
   }
 }

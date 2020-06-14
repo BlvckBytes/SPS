@@ -1,5 +1,8 @@
 package at.sps.core.orm;
 
+import at.sps.core.utils.LogLevel;
+import at.sps.core.utils.SLogging;
+
 import java.lang.reflect.Constructor;
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -49,7 +52,8 @@ public class ObjectRebuilder< T > {
       for( String arg : args )
         this.args.add( this.rs.getObject( arg ) );
     } catch ( Exception e ) {
-      e.printStackTrace();
+      SLogging.getInst().log( "Error while getting columns from SQL-Result!", LogLevel.ERROR );
+      SLogging.getInst().log( e );
     }
 
     return this;
@@ -73,7 +77,8 @@ public class ObjectRebuilder< T > {
       argsArr = args.toArray( argsArr );
       return ( T ) con.newInstance( argsArr );
     } catch ( Exception e ) {
-      e.printStackTrace();
+      SLogging.getInst().log( "Error while re-building an object!", LogLevel.ERROR );
+      SLogging.getInst().log( e );
       return null;
     }
   }
@@ -130,7 +135,8 @@ public class ObjectRebuilder< T > {
       // Return found constructor or null of none found
       return valids.size() > 0 ? valids.get( 0 ) : null;
     } catch ( Exception e ) {
-      e.printStackTrace();
+      SLogging.getInst().log( "Error while searching for a valid constructor!", LogLevel.ERROR );
+      SLogging.getInst().log( e );
       return null;
     }
   }
