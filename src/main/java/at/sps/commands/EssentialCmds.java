@@ -5,25 +5,26 @@ import at.sps.core.conf.Messages;
 import at.sps.core.shortcmds.ShortCommand;
 import at.sps.core.utils.ComplexMessage;
 import at.sps.core.utils.ComplexPart;
-import at.sps.core.utils.Utils;
-import org.bukkit.Bukkit;
+import at.sps.core.utils.LogLevel;
+import at.sps.core.utils.SLogging;
 import org.bukkit.GameMode;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.lang.reflect.Field;
+import java.util.*;
 
-public class EssentialCmds {
+public class EssentialCmds extends CommandBase {
 
   private final Map< Player, Player > msgPartners;
+  private final List< Player > msgSpies;
 
   /**
    * Essential commands holder, create all maps and lists
    */
   public EssentialCmds() {
     this.msgPartners = new HashMap<>();
+    this.msgSpies = new ArrayList<>();
   }
 
   /**
@@ -33,7 +34,6 @@ public class EssentialCmds {
    */
   @ShortCommand( command = "msg", terminalDeny = true )
   private void onMessage( Player sender, String[] args ) {
-
     // No recipient or no message specified
     if ( args.length <= 1 ) {
       sender.sendMessage( Messages.USAGE.apply( "/msg <Empfänger> <Nachricht>" ) );
@@ -41,16 +41,23 @@ public class EssentialCmds {
     }
 
     // Make sure the recipient is online
-    Player target = Bukkit.getPlayer( args[ 0 ] );
-    if ( target == null ) {
-      sender.sendMessage( Messages.NOT_ONLINE.apply( args[ 0 ] ) );
+    Player target = findPlayer( sender, args[ 0 ] );
+    if ( target == null )
+      return;
+
+    // Can't write messages to oneself
+    if( target.equals( sender ) ) {
+      sender.sendMessage( Messages.MSG_SELF.apply() );
       return;
     }
 
     // Send out messages
-    String msg = Utils.concatArgs( args, 1 );
+    String msg = concatArgs( args, 1 );
     sender.sendMessage( Messages.MSG_OUT.apply( target.getDisplayName(), msg ) );
     sender.sendMessage( Messages.MSG_IN.apply( sender.getDisplayName(), msg ) );
+
+    // Send messages to spies
+    informSpies( sender, target, msg );
 
     // Keep last recipient in buffer
     this.msgPartners.put( sender, target );
@@ -64,6 +71,11 @@ public class EssentialCmds {
    */
   @ShortCommand( command = "r", terminalDeny = true )
   private void onReply( Player sender, String[] args ) {
+    // No message specified
+    if ( args.length == 0 ) {
+      sender.sendMessage( Messages.USAGE.apply( "/r <Nachricht>" ) );
+      return;
+    }
 
     // No recipient in buffer yet
     Player partner = this.msgPartners.get( sender );
@@ -72,7 +84,7 @@ public class EssentialCmds {
       return;
     }
 
-    // Recipient went offline
+    // Recipient went offline in the mean time
     if ( !partner.isOnline() ) {
       sender.sendMessage( Messages.WENT_OFFLINE.apply( partner.getDisplayName() ) );
       msgPartners.remove( sender );
@@ -80,16 +92,49 @@ public class EssentialCmds {
       return;
     }
 
-    // No message specified
-    if ( args.length == 0 ) {
-      sender.sendMessage( Messages.USAGE.apply( "/r <Nachricht>" ) );
+    // Send out messages
+    String msg = concatArgs( args, 0 );
+    sender.sendMessage( Messages.MSG_OUT.apply( partner.getDisplayName(), msg ) );
+    sender.sendMessage( Messages.MSG_IN.apply( sender.getDisplayName(), msg ) );
+
+    // Send messages to spies
+    informSpies( sender, partner, msg );
+  }
+
+  @ShortCommand( command = "msgspy", terminalDeny = true )
+  private void onMsgSpy( Player sender, String[] args ) {
+    // No permission
+    if( lacksPermission( sender, "sps.msgspy" ) )
+      return;
+
+    // Contains already, unsibscribe
+    if( msgSpies.contains( sender ) ) {
+      sender.sendMessage( Messages.MSG_SPY_UBSUBSCRIBED.apply() );
+      msgSpies.remove( sender );
       return;
     }
 
-    // Send out messages
-    String msg = Utils.concatArgs( args, 0 );
-    sender.sendMessage( Messages.MSG_OUT.apply( partner.getDisplayName(), msg ) );
-    sender.sendMessage( Messages.MSG_IN.apply( sender.getDisplayName(), msg ) );
+    // Not in the list, subscribe
+    sender.sendMessage( Messages.MSG_SPY_SUBSCRIBED.apply() );
+    msgSpies.add( sender );
+  }
+
+  /**
+   * Inform all players that subscribed to msg-spy-mode that a new
+   * private message has been sent
+   * @param sender Sending player
+   * @param receiver Receiving player
+   * @param message Message sent
+   */
+  private void informSpies( Player sender, Player receiver, String message ) {
+    // Send messages to spies
+    for( Player spy : msgSpies ) {
+      // Don't want to spy your own messages...
+      if( spy.equals( sender ) || spy.equals( receiver ) )
+        continue;
+
+      spy.sendMessage( Messages.MSG_SPY.apply( sender.getDisplayName(), receiver.getDisplayName(), message ) );
+    }
   }
 
   /**
@@ -98,59 +143,96 @@ public class EssentialCmds {
    * Used to change the gamemode of the player
    */
   @ShortCommand( command = "gamemode", aliases = { "gm" } )
-  private void changeGameMode( CommandSender sender, String[] args, String label ) {
-
+  private void onGameMode( CommandSender sender, String[] args, String label ) {
     // No permission
-    if ( !sender.hasPermission( "sps.gm" ) ) {
-      sender.sendMessage( Messages.NO_PERM.apply( "sps.gm" ) );
+    if ( lacksPermission( sender, "sps.gm" ) )
       return;
-    }
 
-    // No args specified
-    if ( args.length == 0 ) {
+    // Arguments mismatch
+    if ( args.length == 0 || args.length > 2 ) {
       sender.sendMessage( Messages.USAGE.apply( "/" + label + " <Modus> [Spieler]" ) );
       return;
     }
 
-    // Parse mode from arg, fallback is survival (0)
-    Integer mode = Utils.tryParseInt( args[ 0 ] );
-    GameMode gm = GameMode.getByValue( mode == null ? 0 : mode );
+    GameMode mode = getGameModeFromInput( args[ 0 ] );
 
-    // Invalid gamemode
-    if ( gm == null ) {
+    // This gamemode is unknown to minecraft
+    if( mode == null ) {
       sender.sendMessage( Messages.INVALID_GM.apply( args[ 0 ] ) );
       return;
     }
 
-    String executor = sender instanceof Player ? ( ( Player ) sender ).getDisplayName() : "Console";
-
-    // Target specified, get player from args and change for that target
-    if ( args.length == 2 ) {
-
-      // No permission
-      if( !sender.hasPermission( "sps.gm.other" ) ) {
-        sender.sendMessage( Messages.NO_PERM.apply( "sps.gm.other" ) );
+    // Change the gamemode for the executor himself
+    if( args.length == 1 ) {
+      // Check if he is a player
+      Player target = getPlayerSender( sender, label );
+      if( target == null )
         return;
+
+      // Set gamemode and notify
+      target.setGameMode( mode );
+      sender.sendMessage( Messages.GM_CHANGED.apply( mode.name() ) );
+      return;
+    }
+
+    // No permission
+    if( lacksPermission( sender, "sps.gm.other" ) )
+      return;
+
+    // Change the gamemode for the target player
+    // Get the target player and validate that he's online
+    Player target = findPlayer( sender, args[ 1 ] );
+    if( target == null )
+      return;
+
+    // Change gamemode
+    target.setGameMode( mode );
+
+    // Notify players
+    String executor = sender instanceof Player ? ( ( Player ) sender ).getDisplayName() : "Console";
+    target.sendMessage( Messages.GM_CHANGED_TARGET.apply( executor, mode.name() ) );
+    sender.sendMessage( Messages.GM_CHANGED_EXECUTOR.apply( target.getDisplayName(), mode.name() ) );
+  }
+
+  /**
+   * Get a gamemode by it's ID from the GameMode internal ID-LUT
+   * @param input ID or name to search for
+   * @return GameMode if existent, null otherwise
+   */
+  @SuppressWarnings( { "unchecked" } )
+  private GameMode getGameModeFromInput( String input ) {
+    try {
+      // Input has been a number, thus use LUT
+      Integer number = tryParseInt( input );
+      if( number != null ) {
+
+        // Make target field accessible
+        Field mapField = GameMode.class.getDeclaredField( "BY_ID" );
+        mapField.setAccessible( true );
+
+        // Get gamemode LUT
+        Map< Integer, GameMode > modeMap = ( Map< Integer, GameMode > ) mapField.get( null );
+
+        // GameMode non existent
+        if ( !modeMap.containsKey( number ) )
+          return null;
+
+        // Return gamemode from LUT
+        return modeMap.get( number );
       }
 
-      Player target = Bukkit.getPlayer( args[ 1 ] );
-      target.setGameMode( gm );
-
-      // Notify players
-      target.sendMessage( Messages.GM_CHANGED_TARGET.apply( executor, gm.name() ) );
-      sender.sendMessage( Messages.GM_CHANGED_EXECUTOR.apply( target.getDisplayName(), gm.name() ) );
-      return;
+      // Input is a string, thus use valueOf
+      try {
+        return GameMode.valueOf( input.toUpperCase() );
+      } catch ( Exception e ) {
+        // Invalid gamemode name
+        return null;
+      }
+    } catch ( Exception e ) {
+      SLogging.getInst().log( "Error while trying to get a gamemode by it's ID!", LogLevel.ERROR );
+      SLogging.getInst().log( e );
+      return null;
     }
-
-    // No player, can't change gm of console...
-    if( executor.equals( "Console" ) ) {
-      sender.sendMessage( Messages.PLAYER_ONLY.apply( label ) );
-      return;
-    }
-
-    // Change for the executor himself, since no target was specified, also notify
-    ( ( Player ) sender ).setGameMode( gm );
-    sender.sendMessage( Messages.GM_CHANGED.apply( gm.name() ) );
   }
 
   /**
@@ -160,56 +242,53 @@ public class EssentialCmds {
    */
   @ShortCommand( command = "fly" )
   private void changeFly( CommandSender sender, String[] args ) {
-
     // No permission
-    if ( !sender.hasPermission( "sps.fly" ) ) {
-      sender.sendMessage( Messages.NO_PERM.apply( "sps.fly" ) );
+    if ( lacksPermission( sender, "sps.fly" ) )
+      return;
+
+    // Arguments mismatch
+    if ( args.length > 1 ) {
+      sender.sendMessage( Messages.USAGE.apply( "/fly [Spieler]" ) );
       return;
     }
-
-    String executor = sender instanceof Player ? ( ( Player ) sender ).getDisplayName() : "Console";
 
     // No target specified, toggle flight for executor
     if ( args.length == 0 ) {
 
-      // No player, can't toggle fly of console...
-      if( executor.equals( "Console" ) ) {
-        sender.sendMessage( Messages.PLAYER_ONLY.apply( "fly" ) );
+      // Validate that the executor is a player
+      Player player = getPlayerSender( sender, "fly" );
+      if( player == null )
         return;
-      }
 
-      // Toggle state and notify
-      Player exec = ( Player ) sender;
-      boolean newState = !exec.getAllowFlight();
-      exec.setAllowFlight( newState );
+      // Toggle state
+      boolean newState = !player.getAllowFlight();
+      player.setAllowFlight( newState );
+
+      // Inform player
       sender.sendMessage( Messages.FLY_CHANGED.apply( ( newState ? "an" : "aus" ) ) );
       return;
     }
 
-    // Target specified
-    if ( args.length == 1 ) {
-      // No permission
-      if ( !sender.hasPermission( "sps.fly.other" ) ) {
-        sender.sendMessage( Messages.NO_PERM.apply( "sps.fly.other" ) );
-        return;
-      }
+    // Target to toggle got specified
+    // No permission
+    if ( lacksPermission( sender, "sps.fly.other" ) )
+      return;
 
-      // Check if target is online
-      Player target = Bukkit.getPlayer( args[ 0 ] );
-      if( target == null ) {
-        sender.sendMessage( Messages.NOT_ONLINE.apply( args[ 0 ] ) );
-        return;
-      }
+    String executor = sender instanceof Player ? ( ( Player ) sender ).getDisplayName() : "Console";
 
-      // Toggle flight
-      boolean newState = !target.getAllowFlight();
-      String newStateName = newState ? "an" : "aus";
-      target.setAllowFlight( newState );
+    // Make sure the target is online
+    Player target = findPlayer( sender, args[ 0 ] );
+    if( target == null )
+      return;
 
-      // Notify players
-      target.sendMessage( Messages.FLY_CHANGED_TARGET.apply( executor, newStateName ) );
-      sender.sendMessage( Messages.FLY_CHANGED_EXECUTOR.apply( target.getDisplayName(), newStateName ) );
-    }
+    // Toggle flight for the target
+    boolean newState = !target.getAllowFlight();
+    target.setAllowFlight( newState );
+
+    // Notify players
+    String newStateName = newState ? "an" : "aus";
+    target.sendMessage( Messages.FLY_CHANGED_TARGET.apply( executor, newStateName ) );
+    sender.sendMessage( Messages.FLY_CHANGED_EXECUTOR.apply( target.getDisplayName(), newStateName ) );
   }
 
   /**

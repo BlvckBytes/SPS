@@ -20,34 +20,6 @@ public class Utils {
   }
 
   /**
-   * Concat an array of arguments for message parameters
-   * @param args Array of args
-   * @param offset Offset to begin concatenating
-   * @return Space delimted string
-   */
-  public static String concatArgs( String[] args, int offset ) {
-    StringBuilder message = new StringBuilder( args[ offset ] );
-
-    for( int i = offset + 1; i < args.length; i++ )
-      message.append( " " ).append( args[ i ] );
-
-    return message.toString();
-  }
-
-  /**
-   * Try to parse a string to an integer
-   * @param value The string to parse
-   * @return The parsed int or null if an error occurred
-   */
-  public static Integer tryParseInt( String value ) {
-    try {
-      return Integer.parseInt( value );
-    } catch ( Exception e ) {
-      return null;
-    }
-  }
-
-  /**
    * Try to parse a string to an integer
    * @param value The string to parse
    * @return The parsed long or null if an error occured
