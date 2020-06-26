@@ -11,11 +11,11 @@ import java.util.UUID;
 public class KitCooldown extends MappableModel {
 
   @Getter @Setter
-  @MapperColumn( unique = true, length = "40" )
+  @MapperColumn( key = true, length = "40" )
   private UUID holder;
 
   @Getter @Setter
-  @MapperColumn( unique = true, length = "32" )
+  @MapperColumn( key = true, length = "32" )
   private int kitID;
 
   @Getter @Setter

@@ -20,7 +20,7 @@ public @interface MapperColumn {
   /**
    * Whether or not this column is unique, thus a key
    */
-  boolean unique() default false;
+  boolean key() default false;
 
   /**
    * Length of the field, if neccesary, specifies the text in the backets TYPE()

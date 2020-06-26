@@ -1,15 +1,9 @@
 package at.sps.core;
 
-import at.sps.commands.EssentialCmds;
-import at.sps.commands.HomeCmds;
-import at.sps.commands.KitCmds;
-import at.sps.commands.WarpCmds;
+import at.sps.commands.*;
 import at.sps.core.conf.SPSConfig;
 import at.sps.core.orm.MariaDB;
-import at.sps.core.orm.mappers.HomeMapper;
-import at.sps.core.orm.mappers.KitCooldownMapper;
-import at.sps.core.orm.mappers.KitMapper;
-import at.sps.core.orm.mappers.WarpMapper;
+import at.sps.core.orm.mappers.*;
 import at.sps.core.shortcmds.SCManager;
 import at.sps.core.utils.LogLevel;
 import at.sps.core.utils.SLogging;
@@ -24,11 +18,16 @@ public class Main extends JavaPlugin {
   private static MariaDB db;
 
   @Getter
+  private static Main inst;
+
+  @Getter
   private static SCManager scM;
 
   // On plugin load
   @Override
   public void onEnable() {
+    inst = this;
+
     // Standard enabling routines
     registerCommands();
     setupResources();
@@ -55,6 +54,7 @@ public class Main extends JavaPlugin {
     scM.registerContainer( new HomeCmds() );
     scM.registerContainer( new WarpCmds() );
     scM.registerContainer( new KitCmds() );
+    scM.registerContainer( new BanCmds() );
   }
 
   /**
@@ -66,7 +66,7 @@ public class Main extends JavaPlugin {
     db.connect();
 
     // Create all needed tables
-    db.buildTables( HomeMapper.getInst(), WarpMapper.getInst(), KitMapper.getInst(), KitCooldownMapper.getInst() );
+    db.buildTables( HomeMapper.getInst(), WarpMapper.getInst(), KitMapper.getInst(), KitCooldownMapper.getInst(), BanMapper.getInst() );
 
     // Create and load config file, this is not used anywhere else ATM
     new SPSConfig( new File( getDataFolder(), "config.yml" ) );

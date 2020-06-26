@@ -7,14 +7,12 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.UUID;
 
 public class Warp extends MappableModel {
 
   @Getter @Setter
-  @MapperColumn( unique = true, length = "128" )
+  @MapperColumn( key = true, length = "128" )
   private String name;
 
   @Getter @Setter

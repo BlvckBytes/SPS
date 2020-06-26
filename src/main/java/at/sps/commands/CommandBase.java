@@ -18,7 +18,7 @@ public abstract class CommandBase {
   protected boolean lacksPermission( CommandSender cs, String permission ) {
     // Doesn't have the permission, return false and send no perm message
     if( !cs.hasPermission( permission ) ) {
-      cs.sendMessage( Messages.NO_PERM.apply( "sps.fly" ) );
+      cs.sendMessage( Messages.NO_PERM.apply( permission ) );
       return true;
     }
 

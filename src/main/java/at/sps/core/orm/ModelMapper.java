@@ -453,7 +453,7 @@ public abstract class ModelMapper< T extends MappableModel > {
       type = mc.length().equals( "" ) && type.equals( "VARCHAR" ) ? "TEXT" : type;
 
       // Append colinfo
-      fields.add( new ColInfo( cName, type, mc.length(), mc.unique(), f ) );
+      fields.add( new ColInfo( cName, type, mc.length(), mc.key(), f ) );
     }
 
     return fields;

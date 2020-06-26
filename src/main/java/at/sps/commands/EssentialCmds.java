@@ -54,7 +54,7 @@ public class EssentialCmds extends CommandBase {
     // Send out messages
     String msg = concatArgs( args, 1 );
     sender.sendMessage( Messages.MSG_OUT.apply( target.getDisplayName(), msg ) );
-    sender.sendMessage( Messages.MSG_IN.apply( sender.getDisplayName(), msg ) );
+    target.sendMessage( Messages.MSG_IN.apply( sender.getDisplayName(), msg ) );
 
     // Send messages to spies
     informSpies( sender, target, msg );
@@ -95,7 +95,7 @@ public class EssentialCmds extends CommandBase {
     // Send out messages
     String msg = concatArgs( args, 0 );
     sender.sendMessage( Messages.MSG_OUT.apply( partner.getDisplayName(), msg ) );
-    sender.sendMessage( Messages.MSG_IN.apply( sender.getDisplayName(), msg ) );
+    partner.sendMessage( Messages.MSG_IN.apply( sender.getDisplayName(), msg ) );
 
     // Send messages to spies
     informSpies( sender, partner, msg );

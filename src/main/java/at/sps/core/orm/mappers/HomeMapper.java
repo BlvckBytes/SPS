@@ -79,6 +79,30 @@ public class HomeMapper extends ModelMapper< Home > {
     }
 
     /**
+     * Count all homes for a specific player
+     * @param playerId Player to count for
+     * @return Number of homes
+     */
+    public int getHomeCount( UUID playerId ) {
+        try {
+            ResultSet countRs = database.fetchResult(
+                "SELECT COUNT(*) AS num FROM `Home`" +
+                "WHERE `uuid` = ?",
+                playerId.toString()
+            );
+
+            if( countRs.next() )
+                return countRs.getInt( "num" );
+        } catch ( Exception e ) {
+            SLogging.getInst().log( "Error while counting player's homes!", LogLevel.ERROR );
+            SLogging.getInst().log( e );
+        }
+
+        // Fallback on errors is max integer, so no homes can be "glitched" due to bugs
+        return Integer.MAX_VALUE;
+    }
+
+    /**
      * List all homes for a specific player
      * @param playerId Home owner ID
      * @return List of his homes
@@ -92,7 +116,7 @@ public class HomeMapper extends ModelMapper< Home > {
                 playerId.toString()
             ) );
         } catch ( Exception e ) {
-            SLogging.getInst().log( "Error while listing homes", LogLevel.ERROR );
+            SLogging.getInst().log( "Error while listing homes!", LogLevel.ERROR );
             SLogging.getInst().log( e );
             return new ArrayList<>();
         }

@@ -12,11 +12,11 @@ import java.util.UUID;
 public class Home extends MappableModel {
 
     @Getter @Setter
-    @MapperColumn( unique = true, length = "128" )
+    @MapperColumn( key = true, length = "128" )
     private String name;
 
     @Getter @Setter
-    @MapperColumn( name = "uuid", unique = true, length = "40" )
+    @MapperColumn( name = "uuid", key = true, length = "40" )
     private UUID playerUUID;
 
     @Getter @Setter

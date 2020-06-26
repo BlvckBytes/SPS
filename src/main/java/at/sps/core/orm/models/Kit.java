@@ -11,7 +11,7 @@ import java.util.List;
 public class Kit extends MappableModel {
 
   @Getter @Setter
-  @MapperColumn( unique = true, length = "128" )
+  @MapperColumn( key = true, length = "128" )
   private String title;
 
   @Getter @Setter

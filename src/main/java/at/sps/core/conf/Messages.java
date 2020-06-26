@@ -15,7 +15,7 @@ public enum Messages {
   USAGE( "&7Bitte benutze: &c${0}" ),
   MSG_OUT( "&6Du &7» &6${0}&7: ${1}" ),
   MSG_IN( "&6${0} &7» &6Dich&7: ${1}" ),
-  MSG_SPY( "&6&i${0} &7&i» &6&i${1}&7&i: ${2}" ),
+  MSG_SPY( "&6&o${0} &7&o» &6&o${1}&7&o: ${2}" ),
   MSG_SPY_SUBSCRIBED( "&7Du &dbist &7nun ein MSG-Spion!" ),
   MSG_SPY_UBSUBSCRIBED( "&7Du bist &dkein &7MSG-Spion mehr!" ),
   MSG_SELF( "&7Du kannst &cdir selbst &7keine Nachrichten senden!" ),
@@ -35,6 +35,7 @@ public enum Messages {
   HOME_EXISTING( "&7Das Home &c${0} &7existiert bereits!" ),
   HOME_CREATED( "&7Du hast das Home &d${0} &7erfolgreich erstellt!" ),
   HOME_DELETED( "&7Du hast das Home &d${0} &7erfolgreich gelöscht!" ),
+  HOME_LIMIT( "&7Du hast dein &cLimit &7an &c${0} &7Homes erreicht!" ),
   HOMES_LIST( "&7Deine Homes: " ),
   HOMES_LIST_HOVER( "&7Erstellt am: &d${0}&7, Ort: &d${1}" ),
   HOME_COLOR( "&d" ),
@@ -65,7 +66,10 @@ public enum Messages {
   WARP_LIST_HOVER( "&7Ort: &d${1}" ),
   WARP_DELIMITER( "&7, " ),
   WARP_COLOR( "&d" ),
-  WARP_NONE( "&cKeine Warps verfügbar!" );
+  WARP_NONE( "&cKeine Warps verfügbar!" ),
+  BANS_PAGE_TITLE( "§8${0}" ),
+  BANS_NO_PREV( "&7Du bist bereits an der &cersten Seite &7angekommen!" ),
+  BANS_NO_NEXT( "&7Du bist bereits an der &cletzten Seite &7angekommen!" );
 
   @Setter
   private String template;

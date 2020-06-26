@@ -9,12 +9,13 @@ import at.sps.core.utils.ComplexMessage;
 import at.sps.core.utils.ComplexPart;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.permissions.PermissionAttachmentInfo;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-public class HomeCmds {
+public class HomeCmds extends CommandBase {
 
     private final SimpleDateFormat homeDateFormat;
 
@@ -35,10 +36,8 @@ public class HomeCmds {
             return;
         }
 
-        // Fetch home from DB
+        // Fetch home from DB and make sure it exists
         Home target = HomeMapper.getInst().getByName( sender.getUniqueId(), args[ 0 ] );
-
-        // Home non existent
         if( target == null ) {
             sender.sendMessage( Messages.HOME_NON_EXISTENT.apply( args[ 0 ] ) );
             return;
@@ -62,6 +61,16 @@ public class HomeCmds {
             return;
         }
 
+        int allowed = getMaxAllowed( sender );
+        int has = HomeMapper.getInst().getHomeCount( sender.getUniqueId() );
+
+        // Has reached his home limit
+        if( has + 1 > allowed ) {
+            sender.sendMessage( Messages.HOME_LIMIT.apply( allowed ) );
+            return;
+        }
+
+        // Create and add home
         Home added = new Home( sender.getUniqueId(), args[ 0 ], sender.getLocation(), System.currentTimeMillis() );
         ActionResult result = HomeMapper.getInst().addHome( added );
 
@@ -81,6 +90,38 @@ public class HomeCmds {
                 sender.sendMessage( Messages.INTERNAL_ERR.apply( "HOMECR->" + result ) );
                 break;
         }
+    }
+
+    /**
+     * Find the max. number of homes a player may own
+     * @param target Target player to check
+     * @return Number of allowed homes
+     */
+    private int getMaxAllowed( Player target ) {
+        // Has the permission to create as many as he likes
+        if( target.isOp() || target.hasPermission( "sps.homes.*" ) )
+            return Integer.MAX_VALUE;
+
+        // Loop all permission attachments of the player
+        int allowed = 0;
+        for( PermissionAttachmentInfo permInf : target.getEffectivePermissions() ) {
+            String perm = permInf.getPermission();
+
+            // Not the target permission (home limiter)
+            if( !perm.startsWith( "sps.homes." ) )
+                continue;
+
+            // Substring from the second dot to the end, make sure it's an integer
+            Integer amount = tryParseInt( perm.substring( perm.indexOf( ".", perm.indexOf( "." ) + 1 ) + 1 ) );
+            if( amount == null )
+                continue;
+
+            // Update the value if current is higher
+            if( amount > allowed )
+                allowed = amount;
+        }
+
+        return allowed;
     }
 
     /**
