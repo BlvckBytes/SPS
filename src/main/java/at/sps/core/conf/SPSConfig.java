@@ -7,6 +7,7 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.*;
+import java.util.List;
 
 public class SPSConfig extends YamlConfiguration {
 
@@ -29,6 +30,7 @@ public class SPSConfig extends YamlConfiguration {
   /**
    * Write all configuration entries available into yaml
    */
+  @SuppressWarnings( { "unchecked" } )
   private void updateEntries() throws IOException {
     // Write all message templates
     boolean wrote = false;
@@ -37,11 +39,19 @@ public class SPSConfig extends YamlConfiguration {
 
       // This value is already existent in config
       if( isSet( key ) ) {
-        msg.setTemplate( getString( key ) );
+        Object val = get( key );
+
+        if( val instanceof String )
+          msg.setInternalTemplate( new String[]{ ( String ) val } );
+        else if( val instanceof List )
+          msg.setInternalTemplate( ( ( List< String > ) val ).toArray( new String[ 0 ] ) );
+
         continue;
       }
 
-      set( key, msg.getTemplate() );
+      // Either write single string or multiline list
+      String[] it = msg.getInternalTemplate();
+      set( key, it.length == 1 ? it[ 0 ] : it );
       wrote = true;
     }
 

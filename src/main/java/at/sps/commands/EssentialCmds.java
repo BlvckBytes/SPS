@@ -3,8 +3,8 @@ package at.sps.commands;
 import at.sps.core.Main;
 import at.sps.core.conf.Messages;
 import at.sps.core.shortcmds.ShortCommand;
-import at.sps.core.utils.ComplexMessage;
-import at.sps.core.utils.ComplexPart;
+import at.sps.core.gui.ComplexMessage;
+import at.sps.core.gui.ComplexPart;
 import at.sps.core.utils.LogLevel;
 import at.sps.core.utils.SLogging;
 import org.bukkit.GameMode;
@@ -319,7 +319,7 @@ public class EssentialCmds extends CommandBase {
    */
   @ShortCommand( command = "sps" )
   private void onSPS( CommandSender sender, String[] args ) {
-    Set< String > commands = Main.getScM().getKnownCommands();
+    Set< String > commands = Main.getInst().getCommands();
     StringBuilder list = new StringBuilder();
 
     // Build list of commands inline

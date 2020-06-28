@@ -1,6 +1,8 @@
 package at.sps.commands;
 
 import at.sps.core.conf.Messages;
+import at.sps.core.gui.ComplexMessage;
+import at.sps.core.gui.ComplexPart;
 import at.sps.core.orm.ActionResult;
 import at.sps.core.orm.mappers.KitCooldownMapper;
 import at.sps.core.orm.mappers.KitMapper;

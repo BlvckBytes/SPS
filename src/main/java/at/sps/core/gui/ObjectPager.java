@@ -1,29 +1,23 @@
-package at.sps.core.utils;
+package at.sps.core.gui;
 
-import at.sps.core.Main;
 import at.sps.core.conf.Messages;
-import org.bukkit.Bukkit;
+import at.sps.core.utils.*;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ObjectPager< T > implements Listener {
+public class ObjectPager< T > extends InventoryGUI implements Listener {
 
   private final Player viewer;
-  private final String title;
   private final List< T > objects;
   private final List< ItemStack > items;
   private ParamCall< T > clickCall;
   private ParamFuncCB< T, ItemStack > translator;
-  private Inventory inv;
   private int page, pages, pageSize;
 
   /**
@@ -31,32 +25,32 @@ public class ObjectPager< T > implements Listener {
    * click will call the listener with that clicked object
    * @param viewer Viewer of the inventory
    * @param title Inventory title
+   * @param rows Number of effective rows
    * @param objects List of objects to page through
    */
-  public ObjectPager( Player viewer, String title, List< T > objects ) {
+  public ObjectPager( Player viewer, String title, int rows, List< T > objects ) {
+    // Rows + 1 since there is 1 control row
+    super( title, rows + 1 );
+
     this.viewer = viewer;
-    this.title = title;
     this.objects = objects;
     this.items = new ArrayList<>();
 
-    // Register all events in this object
-    Bukkit.getServer().getPluginManager().registerEvents( this, Main.getInst() );
+    setClickListener( pair -> onClick( pair.getValue(), pair.getKey() ) );
   }
 
   /**
-   * Build the inventory based on the title and objects provided
+   * Build the inventory based on the objects provided
    */
   private void buildInventory() {
-    // Create inventory, 9 by 4, with provided title
-    inv = Bukkit.createInventory( null, 9 * 4, this.title );
     pageSize = inv.getSize() - 9;
     pages = ( int ) Math.ceil( items.size() / ( float ) pageSize );
 
     // Previous page item
     inv.setItem( 28, new ItemBuilder( Material.SKULL_ITEM, 1, 3 )
       .setSkullOwner( "MHF_ArrowLeft" )
-      .setName( "§8« §dVorherige Seite §8»" )
-      .setLore( "§7Klicken, um auf die vorherige", "§7Seite zu navigieren" )
+      .setName( Messages.PAGER_PREV_TITLE.getTemplate() )
+      .setLore( Messages.PAGER_PREV_LORE.getTemplateML() )
       .build()
     );
 
@@ -72,8 +66,8 @@ public class ObjectPager< T > implements Listener {
     // Next page item
     inv.setItem( 34, new ItemBuilder( Material.SKULL_ITEM, 1, 3 )
       .setSkullOwner( "MHF_ArrowRight" )
-      .setName( "§8« §dNächste Seite §8»" )
-      .setLore( "§7Klicken, um auf die nächste", "§7Seite zu navigieren" )
+      .setName( Messages.PAGER_NEXT_TITLE.getTemplate() )
+      .setLore( Messages.PAGER_NEXT_LORE.getTemplateML() )
       .build()
     );
   }
@@ -84,8 +78,8 @@ public class ObjectPager< T > implements Listener {
   private void updatePageItem() {
     // Current page information item, +1 since page needs to be 0-based
     inv.setItem( 31, new ItemBuilder( Material.BOOK, 1 )
-      .setName( "§d" + ( page + 1 ) + "§8/§d" + Math.max( 1, pages ) )
-      .setLore( "§7Dieses Item zeigt Dir, auf welcher", "§7Seite Du dich befindest." )
+      .setName( Messages.PAGER_PAGE_TITLE.applyPrefixless( page + 1, Math.max( 1, pages ) ) )
+      .setLore( Messages.PAGER_PAGE_LORE.getTemplateML() )
       .build()
     );
   }
@@ -153,23 +147,11 @@ public class ObjectPager< T > implements Listener {
   }
 
   /**
-   * Handle inventory clicking (page up/down, object callback)
+   * Handle item clicking, basically paging and object callbacks
+   * @param is ItemStack that has been clicked
+   * @param sl Slot that has been clicked on
    */
-  @EventHandler
-  private void onClick( InventoryClickEvent e ) {
-    // Only target this inventory
-    if( !e.getInventory().equals( inv ) )
-      return;
-
-    // Cancel item move
-    e.setCancelled( true );
-
-    // No item has been clicked
-    if( e.getCurrentItem() == null )
-      return;
-
-    ItemStack is = e.getCurrentItem();
-
+  private void onClick( ItemStack is, int sl ) {
     // If the clicked item is a skull which can hold owner names (3)
     if( is.getType() == Material.SKULL_ITEM && is.getDurability() == 3 ) {
       String owner = ( ( SkullMeta ) is.getItemMeta() ).getOwner();
@@ -189,8 +171,8 @@ public class ObjectPager< T > implements Listener {
     }
 
     // Within page size, thus it's a object
-    if( e.getSlot() < pageSize ) {
-      int ind = page * 27 + e.getSlot();
+    if( sl < pageSize ) {
+      int ind = page * 27 + sl;
 
       // No item at that location
       if( ind > objects.size() - 1 )

@@ -5,8 +5,8 @@ import at.sps.core.orm.ActionResult;
 import at.sps.core.orm.mappers.WarpMapper;
 import at.sps.core.orm.models.Warp;
 import at.sps.core.shortcmds.ShortCommand;
-import at.sps.core.utils.ComplexMessage;
-import at.sps.core.utils.ComplexPart;
+import at.sps.core.gui.ComplexMessage;
+import at.sps.core.gui.ComplexPart;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 

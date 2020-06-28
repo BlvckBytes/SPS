@@ -20,12 +20,16 @@ public class Ban extends MappableModel {
   private UUID creator;
 
   @Getter @Setter
+  @MapperColumn( nullable = true)
+  private UUID revoker;
+
+  @Getter @Setter
   @MapperColumn
   private boolean permanent;
 
   @Getter @Setter
   @MapperColumn( key = true )
-  private long creationDate;
+  private long creationDate, revokeDate;
 
   @Getter @Setter
   @MapperColumn
@@ -38,6 +42,10 @@ public class Ban extends MappableModel {
   @Getter @Setter
   @MapperColumn
   private String reason;
+
+  @Getter @Setter
+  @MapperColumn( nullable = true )
+  private String revokeReason;
 
   /**
    * Create a new permanent ban with a ban-reason for a player
@@ -77,12 +85,15 @@ public class Ban extends MappableModel {
    * @param permanent Whether or not this ban is permanent
    * @param ipAddresses List of ip addresses this ban includes
    */
-  public Ban( UUID holder, UUID creator, String reason, long creationDate, long expireDate, boolean permanent, List< String > ipAddresses ) {
+  public Ban( UUID holder, UUID creator, String reason, long creationDate, long expireDate, boolean permanent, List< String > ipAddresses, UUID revoker, String revokeReason, long revokeDate ) {
     this( holder, creator, reason, expireDate );
     this.creationDate = creationDate;
     this.expireDate = expireDate;
     this.permanent = permanent;
     this.ipAddresses = ipAddresses;
+    this.revoker = revoker;
+    this.revokeReason = revokeReason;
+    this.revokeDate = revokeDate;
   }
 
   /**
@@ -90,9 +101,26 @@ public class Ban extends MappableModel {
    * @return True if active, false otherwise
    */
   public boolean isActive() {
+    if( this.revoker != null )
+      return false;
+
     if( this.permanent )
       return true;
 
     return expireDate - System.currentTimeMillis() > 0;
+  }
+
+  /**
+   * Revoke this ban if it hasn't been already revoked by someone else
+   * @param revoker UUID of the revoking player
+   * @param revokeReason Reason why it got revoked
+   */
+  public void revoke( UUID revoker, String revokeReason ) {
+    if( this.revoker != null )
+      return;
+
+    this.revoker = revoker;
+    this.revokeReason = revokeReason;
+    this.revokeDate = System.currentTimeMillis();
   }
 }

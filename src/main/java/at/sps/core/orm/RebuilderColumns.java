@@ -33,4 +33,9 @@ public @interface RebuilderColumns {
    */
   String[] lengths() default {};
 
+  /**
+   * Nullable field states, in the same order as fields
+   */
+  boolean[] nullables() default {};
+
 }

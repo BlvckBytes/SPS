@@ -1,7 +1,11 @@
 package at.sps.core.conf;
 
 import at.sps.core.utils.Utils;
+import lombok.Getter;
 import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public enum Messages {
 
@@ -67,18 +71,47 @@ public enum Messages {
   WARP_DELIMITER( "&7, " ),
   WARP_COLOR( "&d" ),
   WARP_NONE( "&cKeine Warps verfügbar!" ),
-  BANS_PAGE_TITLE( "§8${0}" ),
+  PAGER_PREV_TITLE( "&8« &dVorherige Seite &8»" ),
+  PAGER_PREV_LORE(
+    "&7Klicken, um auf die vorherige",
+    "&7Seite zu gelangen"
+  ),
+  PAGER_NEXT_TITLE( "&8« &dNächste Seite &8»" ),
+  PAGER_NEXT_LORE(
+    "&7Klicken, um auf die nächste",
+    "&7Seite zu gelangen"
+  ),
+  PAGER_PAGE_TITLE( "&8« &dSeite ${0}&8/&d${1} &8»" ),
+  PAGER_PAGE_LORE(
+    "&7Dieses Item zeigt Dir, auf",
+    "&7welcher Seite Du bist"
+  ),
+  BANS_PAGE_TITLE( "&8${0}" ),
   BANS_NO_PREV( "&7Du bist bereits an der &cersten Seite &7angekommen!" ),
-  BANS_NO_NEXT( "&7Du bist bereits an der &cletzten Seite &7angekommen!" );
+  BANS_NO_NEXT( "&7Du bist bereits an der &cletzten Seite &7angekommen!" ),
+  BANS_ITEM_LORE(
+    "&7Grund: &d${0}",
+    "&7Ersteller: &d${1}",
+    "&7Erstellt am: &d${2}",
+    "&7Dauer: ${3}",
+    "&7Aktiv: ${4}",
+    "&7IPs: ${5}",
+    "&7Aufgehoben: ${6}",
+    "&7Aufhebegrund: &d${7}"
+  ),
+  BANS_ITEM_PERM_TITLE( "&4Permanenter Bann" ),
+  BANS_ITEM_TEMP_TITLE( "&6Temporärer Bann" ),
+  BANS_ITEM_OVER_PERM_TITLE( "&2Permanenter Bann" ),
+  BANS_ITEM_OVER_TEMP_TITLE( "&2Permanenter Bann" );
 
-  @Setter
-  private String template;
+  @Setter @Getter
+  private String[] internalTemplate;
 
   /**
    * Internal constructor to set the template string corresponding to the enum
    */
-  Messages( String template ) {
-    this.template = template;
+  Messages( String... template ) {
+    this.internalTemplate = template;
   }
 
   /**
@@ -88,17 +121,42 @@ public enum Messages {
    * @return String with translated colors and applied placeholders
    */
   public String applyPrefixless( Object... placeholders ) {
-    String result = template;
+    // Apply prefixless for all lines, joined by newline char
+    return applyPrefixless( String.join( "\n", internalTemplate ), placeholders );
+  }
 
+  /**
+   * Apply placeholder texts to the message's markings, like ${x} where x
+   * is the index of the placeholder from parameters
+   * @param input String to apply to
+   * @param placeholders Array of values to put in placeholders
+   * @return String with translated colors and applied placeholders
+   */
+  private String applyPrefixless( String input, Object... placeholders ) {
     // Apply placeholders by their index
     int c = 0;
     for( Object ph : placeholders ) {
-      result = result.replace( "${" + c + "}", ph.toString() );
+      input = input.replace( "${" + c + "}", ph.toString() );
       c++;
     }
 
     // Apply prefix if specified by the boolean
-    return Utils.translateColors( result );
+    return Utils.translateColors( input );
+  }
+
+  /**
+   * Apply prefixless templates and respond with multiple lines
+   * @param placeholders Placeholders to apply in order
+   * @return List of strings with replaced lines
+   */
+  public List< String > applyPrefixlessML( Object... placeholders ) {
+    List< String > buf = new ArrayList<>();
+
+    // Apply the placeholders to every line
+    for( String line : internalTemplate )
+      buf.add( applyPrefixless( line, placeholders ) );
+
+    return buf;
   }
 
   /**
@@ -106,7 +164,21 @@ public enum Messages {
    * @return Template string of enum
    */
   public String getTemplate() {
-    return Utils.translateColors( template );
+    return Utils.translateColors( String.join( "\n", internalTemplate ) );
+  }
+
+  /**
+   * Getter for the template only, replaces colors
+   * @return Template lines of enum
+   */
+  public List< String > getTemplateML() {
+    List< String > buf = new ArrayList<>();
+
+    // Apply the color translation to every line
+    for( String line : internalTemplate )
+      buf.add( Utils.translateColors( line ) );
+
+    return buf;
   }
 
   /**
@@ -115,6 +187,12 @@ public enum Messages {
    * @return String with translated colors and applied placeholders plus prefix
    */
   public String apply( Object... placeholders ) {
-    return PREFIX.getTemplate() + applyPrefixless( placeholders );
+    StringBuilder buf = new StringBuilder();
+
+    // Apply the prefix and placeholders to every line
+    for( String line : internalTemplate )
+      buf.append( PREFIX.getTemplate() ).append( applyPrefixless( line, placeholders ) );
+
+    return Utils.translateColors( buf.toString() );
   }
 }

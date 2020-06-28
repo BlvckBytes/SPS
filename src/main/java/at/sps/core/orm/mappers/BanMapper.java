@@ -65,10 +65,15 @@ public class BanMapper extends ModelMapper< Ban > {
         // Fetch data and generate Ban object into buffer list
         UUID holder = UUID.fromString( rs.getString( "holder" ) );
         UUID creator = UUID.fromString( rs.getString( "creator" ) );
+        UUID revoker = UUID.fromString( rs.getString( "revoker" ) );
         List< String > ips = Arrays.asList( rs.getString( "ipAddresses" ).split( ";" ) );
-        Ban ban = new Ban( holder, creator, rs.getString( "reason" ), rs.getLong( "creationDate" ), rs.getLong( "expireDate" ), rs.getBoolean( "permanent" ), ips );
-        bindID( ban, rs );
 
+        Ban ban = new Ban(
+          holder, creator, rs.getString( "reason" ), rs.getLong( "creationDate" ), rs.getLong( "expireDate" ),
+          rs.getBoolean( "permanent" ), ips, revoker, rs.getString( "revokeReason" ), rs.getLong( "revokeDate" )
+        );
+
+        bindID( ban, rs );
         buf.add( ban );
       }
     } catch ( Exception e ) {

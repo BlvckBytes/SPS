@@ -301,7 +301,7 @@ public abstract class ModelMapper< T extends MappableModel > {
         throw new IllegalStateException( "Found duplicate column names! Beware that the struct gets flattened and names need to be unique!" );
 
       // Append signature
-      query.append( ", " ).append( makeColumn( ci.getTarget(), ci.getName(), ci.getLength() ) );
+      query.append( ", " ).append( makeColumn( ci.getTarget(), ci.getName(), ci.getLength(), ci.isNullable() ) );
       colNames.add( ci.getName().toLowerCase() );
     }
 
@@ -335,7 +335,7 @@ public abstract class ModelMapper< T extends MappableModel > {
    * @param len Length for the datatype, leave empty to set none
    * @return Ready to use column signature
    */
-  private String makeColumn( Field f, String annoName, String len ) {
+  private String makeColumn( Field f, String annoName, String len, boolean nullable ) {
     String cName = annoName.equals( "" ) ? f.getName() : annoName;
     String length = len.equals( "" ) ? "" : "(" + len + ")";
 
@@ -344,7 +344,7 @@ public abstract class ModelMapper< T extends MappableModel > {
     type = len.equals( "" ) && type.equals( "VARCHAR" ) ? "TEXT" : type;
 
     // Append new column with it's properties
-    return "`" + cName + "` " + type + length + " NOT NULL";
+    return "`" + cName + "` " + type + length + ( nullable ? "" : " NOT" ) + " NULL";
   }
 
   /**
@@ -385,7 +385,7 @@ public abstract class ModelMapper< T extends MappableModel > {
     // Add ID field, every model must inherit this
     Field idF = target.getSuperclass().getDeclaredField( "ID" );
     idF.setAccessible( true );
-    fields.addFirst( new ColInfo( idF.getName(), getSQLDatatype( idF ), "32", false, idF ) );
+    fields.addFirst( new ColInfo( idF.getName(), getSQLDatatype( idF ), "32", false, false, idF ) );
 
     return fields;
   }
@@ -421,13 +421,14 @@ public abstract class ModelMapper< T extends MappableModel > {
         String cName = parent.names().length > j ? parent.names()[ j ] : f.getName();
         String cLen = parent.lengths().length > j ? parent.lengths()[ j ] : "";
         boolean cUniq = parent.uniques().length > j && parent.uniques()[ j ];
+        boolean cNull = parent.nullables().length > j && parent.nullables()[ j ];
 
         // If it would be a varchar but no length has been specified, make it text
         String type = getSQLDatatype( f );
         type = cLen.equals( "" ) && type.equals( "VARCHAR" ) ? "TEXT" : type;
 
         // Append colinfo list
-        fields.set( j, new ColInfo( cName, type, cLen, cUniq, f ) );
+        fields.set( j, new ColInfo( cName, type, cLen, cUniq, cNull, f ) );
         continue;
       }
 
@@ -453,7 +454,7 @@ public abstract class ModelMapper< T extends MappableModel > {
       type = mc.length().equals( "" ) && type.equals( "VARCHAR" ) ? "TEXT" : type;
 
       // Append colinfo
-      fields.add( new ColInfo( cName, type, mc.length(), mc.key(), f ) );
+      fields.add( new ColInfo( cName, type, mc.length(), mc.key(), mc.nullable(), f ) );
     }
 
     return fields;

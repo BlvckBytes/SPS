@@ -10,7 +10,7 @@ public class ColInfo {
   private final String name, type, length;
 
   @Getter
-  private final boolean unique;
+  private final boolean unique, nullable;
 
   @Getter
   private final Field target;
@@ -24,11 +24,12 @@ public class ColInfo {
    * @param unique If this is a unique key
    * @param target Target field for reflect use
    */
-  public ColInfo( String name, String type, String length, boolean unique, Field target ) {
+  public ColInfo( String name, String type, String length, boolean unique, boolean nullable, Field target ) {
     this.name = name;
     this.type = type;
     this.length = length;
     this.unique = unique;
+    this.nullable = nullable;
     this.target = target;
   }
 }

@@ -26,4 +26,9 @@ public @interface MapperColumn {
    * Length of the field, if neccesary, specifies the text in the backets TYPE()
    */
   String length() default "";
+
+  /**
+   * Whether or not this field is nullable
+   */
+  boolean nullable() default false;
 }

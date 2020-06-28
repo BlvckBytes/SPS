@@ -1,5 +1,8 @@
-package at.sps.core.utils;
+package at.sps.core.gui;
 
+import at.sps.core.utils.LogLevel;
+import at.sps.core.utils.NMSHelper;
+import at.sps.core.utils.SLogging;
 import org.bukkit.entity.Player;
 
 import java.lang.reflect.Method;

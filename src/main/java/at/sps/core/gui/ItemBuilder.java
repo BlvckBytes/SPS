@@ -1,4 +1,4 @@
-package at.sps.core.utils;
+package at.sps.core.gui;
 
 import org.bukkit.Color;
 import org.bukkit.DyeColor;
